@@ -51,20 +51,20 @@ function Transmon_Resonators_Constructor(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs;
         push!(n̂ᵣs, IdentityWrapper(hilbertspace, Dict(name=>Components[name].N̂), order = order))
     end
     
-    Collapse_Ops = Dict{Any, Any}()
+    CandD_Ops = Dict{Any, Any}()
 
     Transmon_Dephasing = 0*Components["Transmon"].Ĥ
     for i in 1:Nₜ
         Transmon_Dephasing+=sqrt(κᵗᵈ)*(i-1)*qo.transition(Components["Transmon"].𝔹, i, i)
     end
-    Collapse_Ops["Transmon Dephasing"] = IdentityWrapper(hilbertspace, Dict("Transmon"=>Transmon_Dephasing), order = order)
+    CandD_Ops["Transmon Dephasing"] = IdentityWrapper(hilbertspace, Dict("Transmon"=>Transmon_Dephasing), order = order)
 
     Transmon_Collapse = 0*Components["Transmon"].Ĥ
     for i in 1:Nₜ-1
         ip1 = i+1
         Transmon_Collapse+=sqrt(κᵗᶜ)*(ip1 - 1)*qo.transition(Components["Transmon"].𝔹, i, ip1)
     end
-    Collapse_Ops["Transmon Collapse"] = IdentityWrapper(hilbertspace, Dict("Transmon"=>Transmon_Collapse), order = order)
+    CandD_Ops["Transmon Collapse"] = IdentityWrapper(hilbertspace, Dict("Transmon"=>Transmon_Collapse), order = order)
 
     for mode in 1:length(Nᵣs)
         name = Cavity_Names[mode]
@@ -75,12 +75,12 @@ function Transmon_Resonators_Constructor(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs;
             ψip1 = qo.fockstate(Components[name].𝔹, i-1+1)
             Cavity_Collapse += sqrt(κᶜᶜ)*(ip1-1)*ψi*ψip1'
         end
-        Collapse_Ops[name*" Collapse"] = IdentityWrapper(hilbertspace, Dict(name=>Cavity_Collapse), order = order)
+        CandD_Ops[name*" Collapse"] = IdentityWrapper(hilbertspace, Dict(name=>Cavity_Collapse), order = order)
     end
     
 
 
-    return Transmon_Resonators(params = params, hilbertspace=hilbertspace, n̂ₜ=n̂ₜ, Stuff = Dict{Any, Any}(), dressed_states = hilbertspace.dressed_states, dressed_energies = hilbertspace.dressed_energies, order = order, n̂ᵣs = n̂ᵣs, Collapse_Ops = Collapse_Ops, Ĥ = hilbertspace.Ĥ)
+    return Transmon_Resonators(params = params, hilbertspace=hilbertspace, n̂ₜ=n̂ₜ, Stuff = Dict{Any, Any}(), dressed_states = hilbertspace.dressed_states, dressed_energies = hilbertspace.dressed_energies, order = order, n̂ᵣs = n̂ᵣs, CandD_Ops = CandD_Ops, Ĥ = hilbertspace.Ĥ)
  
 end
 

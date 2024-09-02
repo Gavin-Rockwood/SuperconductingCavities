@@ -195,19 +195,21 @@ function RunPulseSequence(model::Transmon_Resonators, ψ::qo.Ket, op_sequence; s
 
     for i in 1:length(op_sequence)
         op = op_sequence[i]
-        RunSingleOperator(model, ψ, model.Stuff["op_drive_params"][op]; spps = spps, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = "Step_"*string(i), to_return = "All WFs")
+        @info "Running operator $op"
+        ψ = RunSingleOperator(model, ψ, model.Stuff["op_drive_params"][op]; spps = spps, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = "Step_"*string(i), to_return = "Last WF")
     end
 end
 
 
-function RunPulseSequence(model::Transmon_Resonators, ρ::qo.Operator, op_sequence; spps = 5, solver_kwargs = Dict{Any, Any}(), run_name = "", save_path = "Data/")
+function RunPulseSequence(model::Transmon_Resonators, ρ::qo.Operator, op_sequence; spps = 5, solver_kwargs = Dict{Any, Any}(), run_name = "", save_path = "Data/", c_ops = [])
     if run_name == ""
         run_name = "Operator_Sequence_"*string(now())
     end
 
     for i in 1:length(op_sequence)
         op = op_sequence[i]
-        RunSingleOperator(model, ρ, model.Stuff["op_drive_params"][op]; spps = spps, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = "Step_"*string(i), to_return = "All DMs")
+        @info "Running operator $op"
+        ρ = RunSingleOperator(model, ρ, model.Stuff["op_drive_params"][op]; spps = spps, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = "Step_"*string(i), to_return = "Last DM", c_ops = c_ops)
     end
 end
 

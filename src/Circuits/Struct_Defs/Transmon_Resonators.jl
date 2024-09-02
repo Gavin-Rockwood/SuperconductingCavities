@@ -10,7 +10,7 @@ export Transmon_Resonators
     n̂ₜ :: qo.Operator
     n̂ᵣs :: Vector
 
-    Collapse_Ops :: Dict
+    CandD_Ops :: Dict
 
     Stuff :: Dict
     
