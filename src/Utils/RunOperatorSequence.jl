@@ -5,7 +5,7 @@ using NetCDF
 
 function RunSingleOperator(model::Transmon_Resonators, ψ:: qo.Ket, op_params; spps = 5, solver_kwargs = Dict{Any, Any}(), save_step = true, step_name = "DEFAULT", to_return = "All WFs", save_path = "Data/", run_name = "", save_as_seperate_file = false)
     step_name = replace(step_name, " " => "_")
-    to_return_vals = ["All WFs", "Last WF", "Overlaps"]
+    to_return_vals = ["All WFs", "Last WF", "Overlaps", "Nothing"]
     if !(to_return in to_return_vals)
         println("to_return (\"$to_return\") not one of the accepted values: ")
         for val in to_return_vals
@@ -57,7 +57,9 @@ function RunSingleOperator(model::Transmon_Resonators, ψ:: qo.Ket, op_params; s
         
         properties = Dict{Any, Any}("Data"=>"Overlaps", "Time"=>string(now()), "Times" => tspan)
         data = zeros(size(axlist))
-        overlaps = Dataset(; Symbol(step_name) => YAXArray(axlist, data, properties))
+
+        ds_properties = Dict{Any, Any}("Basis Shape" => qo.basis(model.hilbertspace.Ĥ).shape, "Data"=>"Wave Function Amplitudes")
+        overlaps = Dataset(; Symbol(step_name) => YAXArray(axlist, data, properties), properties = ds_properties)
 
         coords = Iterators.product(axlist...)
         for coord in coords            
@@ -151,7 +153,9 @@ function RunSingleOperator(model::Transmon_Resonators, ρ:: qo.Operator, op_para
         
         properties = Dict{Any, Any}("Data"=>"Probabilities", "Time"=>string(now()), "Times" => tspan)
         data = zeros(size(axlist))
-        probabilities = Dataset(; Symbol(step_name) => YAXArray(axlist, data, properties))
+        
+        ds_properties = Dict{Any, Any}("Basis Shape" => qo.basis(model.hilbertspace.Ĥ).shape, "Data"=>"Probabilities From Density Matrix")
+        probabilities = Dataset(; Symbol(step_name) => YAXArray(axlist, data, properties), properties = ds_properties)
 
         coords = Iterators.product(axlist...)
         for coord in coords            
@@ -163,6 +167,7 @@ function RunSingleOperator(model::Transmon_Resonators, ρ:: qo.Operator, op_para
             probabilities.cubes[Symbol(step_name)][At.([state, step])...] = probability
         end
     end
+
 
     if save_step
         file_name = save_path*run_name
