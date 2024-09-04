@@ -58,7 +58,7 @@ function RunSingleOperator(model::Transmon_Resonators, ψ:: qo.Ket, op_params; s
         properties = Dict{Any, Any}("Data"=>"Overlaps", "Time"=>string(now()), "Times" => tspan)
         data = zeros(size(axlist))
 
-        ds_properties = Dict{Any, Any}("Basis Shape" => qo.basis(model.hilbertspace.Ĥ).shape, "Data"=>"Wave Function Amplitudes")
+        ds_properties = Dict{Any, Any}("Basis Shape" => qo.basis(model.hilbertspace.Ĥ).shape, "Data"=>"Wave Function Amplitudes", "Solver_Args" => string(solver_kwargs))
         overlaps = Dataset(; Symbol(step_name) => YAXArray(axlist, data, properties), properties = ds_properties)
 
         coords = Iterators.product(axlist...)
@@ -154,7 +154,7 @@ function RunSingleOperator(model::Transmon_Resonators, ρ:: qo.Operator, op_para
         properties = Dict{Any, Any}("Data"=>"Probabilities", "Time"=>string(now()), "Times" => tspan)
         data = zeros(size(axlist))
         
-        ds_properties = Dict{Any, Any}("Basis Shape" => qo.basis(model.hilbertspace.Ĥ).shape, "Data"=>"Probabilities From Density Matrix")
+        ds_properties = Dict{Any, Any}("Basis Shape" => qo.basis(model.hilbertspace.Ĥ).shape, "Data"=>"Probabilities From Density Matrix", "Solver_Args"=>string(solver_kwargs))
         probabilities = Dataset(; Symbol(step_name) => YAXArray(axlist, data, properties), properties = ds_properties)
 
         coords = Iterators.product(axlist...)

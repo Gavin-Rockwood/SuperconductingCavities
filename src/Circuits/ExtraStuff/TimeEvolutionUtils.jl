@@ -4,6 +4,7 @@ export Get_Drive_Hamiltonian, Get_Drive_Hamiltonian_With_Envelope, f_for_schroed
 function Get_Drive_Hamiltonian(model, op, ν, ε)
     return Get_Drive_Hamiltonia_With_Envelope(model, op, ν, ε, Square_Envelope)
 end
+
 function Get_Drive_Hamiltonian_With_Envelope(model, op, ν, ε, envelope)
     return t->ε*envelope(t)*sin(2π*ν*t)*op+model.hilbertspace.Ĥ
 end

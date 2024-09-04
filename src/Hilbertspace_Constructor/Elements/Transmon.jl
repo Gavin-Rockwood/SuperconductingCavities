@@ -85,7 +85,4 @@ function Init_Transmon(Eᶜ, Eʲ, N_cut, N, name;  ng = 0)
     eigsys = qo.eigenstates(qo.dense(Ĥ))
     
     return Transmon(name = name, Eᶜ = Eᶜ, Eʲ = Eʲ, ng = ng, N_cut = N_cut, N = N, 𝔹_cut = 𝔹_cut, 𝔹 = 𝔹, Ĥ_cut = Ĥ_cut, Ĥ = Ĥ, n̂_cut = n̂_cut, n̂ = n̂, eigsys_cut = eigsys_cut, eigsys = eigsys)
-
-
-
 end
