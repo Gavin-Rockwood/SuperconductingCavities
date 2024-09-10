@@ -2,7 +2,7 @@
 export Get_Drive_Hamiltonian, Get_Drive_Hamiltonian_With_Envelope, f_for_schroedinger_dynamic, f_for_schroedinger_dynamic, f_for_master_dynamic
 
 function Get_Drive_Hamiltonian(model, op, ν, ε)
-    return Get_Drive_Hamiltonia_With_Envelope(model, op, ν, ε, Square_Envelope)
+    return Get_Drive_Hamiltonian_With_Envelope(model, op, ν, ε, Square_Envelope)
 end
 
 function Get_Drive_Hamiltonian_With_Envelope(model, op, ν, ε, envelope)
