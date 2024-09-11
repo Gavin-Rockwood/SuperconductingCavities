@@ -32,9 +32,9 @@ function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; ma
     for state in dims(tracking_res, :State)
         ytemp = []
         for step in dims(tracking_res, :Step)
-            val = tracking_res[State = At(state), Step = At(step)]["F_Energies"]
+            val = tracking_res[State = At(state), Step = At(step)]["F_Energies"]/pi
             if val < 0
-                val += 0#2*abs(νs[step])
+                val += 2*abs(νs[step])
             end
             push!(ytemp, val)
         end
@@ -42,13 +42,19 @@ function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; ma
     end
 
     x = collect(νs .- ν)
-    difs = abs.(ys[1]-ys[2]);
+    difs1 = abs.(ys[1]-ys[2]);
+    difs2 = 2*abs.(νs) - abs.(ys[1]-ys[2])
+
+    difs = []
+    for i in 1:length(difs1)
+        push!(difs, min(difs1[i], difs2[i]))
+    end
 
     to_fit(t, p) = p[3].*sqrt.((t.-p[1]).^2 .+ p[2].^2)
     p0 = zeros(3)
     p0[1] = x[argmin(difs)]
-    p0[2] =minimum(difs)
-    p0[3] = abs((maximum(difs)-minimum(difs))/(x[argmax(difs)]-x[argmin(difs)]));
+    p0[2] = minimum(difs)
+    p0[3] = abs((maximum(difs)-minimum(difs))/(x[argmax(difs)]-x[argmin(difs)]))
     fit = LF.curve_fit(to_fit, x, difs, p0)
     
     if make_plot 
@@ -68,9 +74,9 @@ function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; ma
             state = dims(tracking_res, :State)[i]
             y = []
             for step in dims(tracking_res, :Step)
-                val = tracking_res[State = At(state), Step = At(step)]["F_Energies"]
+                val = tracking_res[State = At(state), Step = At(step)]["F_Energies"]/pi
                 if val < 0
-                    val = val += 2*abs(νs[step])
+                    val += 2*abs(νs[step])
                 end
                 push!(y, val)
             end

@@ -6,7 +6,7 @@ function Get_Drive_Hamiltonian(model, op, ν, ε)
 end
 
 function Get_Drive_Hamiltonian_With_Envelope(model, op, ν, ε, envelope)
-    return t->ε*envelope(t)*sin(2π*ν*t)*op+model.hilbertspace.Ĥ
+    return t->2*pi*(ε*envelope(t)*sin(2π*ν*t)*op+model.hilbertspace.Ĥ)
 end
 
 function Get_Envelope(envelope_name, envelope_kwargs)
@@ -27,7 +27,7 @@ function f_for_schroedinger_dynamic(model, op, ν, ε; envelope_name = "Square E
     op = qo.sparse(op)
     Ĥ = qo.sparse(model.Ĥ)
 
-    return (t, ψ) -> 2*π*(ε*envelope(t)*sin(2*π*ν*t)*op+Ĥ)
+    return (t, ψ) -> 2*pi*(ε*envelope(t)*sin(2*π*ν*t)*op+Ĥ)
 end
 
 function f_for_master_dynamic(model, op, ν, ε; c_ops = [], envelope_name = "Square Envelope", envelope_kwargs = Dict{Any, Any}())
@@ -39,5 +39,5 @@ function f_for_master_dynamic(model, op, ν, ε; c_ops = [], envelope_name = "Sq
 
     c_ops = collect(values(c_ops))
 
-    return (t, ψ) -> [2*π*(ε*envelope(t)*sin(2*π*ν*t)*op+Ĥ), c_ops, qo.dagger.(c_ops)]
+    return (t, ψ) -> [2*pi*(ε*envelope(t)*sin(2*π*ν*t)*op+Ĥ), c_ops, qo.dagger.(c_ops)]
 end

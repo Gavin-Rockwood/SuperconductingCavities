@@ -27,7 +27,7 @@ function Floquet_0_Sweep(model, drive_op, list_of_params; Floq_N_Steps = 100)
     @info "Beginning Floquet Sweep"
     for i in 1:STEPS
         @debug "On Param Set Number $i"
-        Ĥₜ = Get_Drive_Hamiltonian(model, drive_op, list_of_params[i]["ν"], list_of_params[i]["ε"])
+        Ĥₜ = Get_Drive_Hamiltonian(model, drive_op, list_of_params[i]["ν"], list_of_params[i]["ε"])#*2*pi
         λs, λ⃗s = Get_Floquet_t0_eigsys(Ĥₜ, 1/list_of_params[i]["ν"], N_Steps = Floq_N_Steps)
 
         push!(F_Energies, λs)
