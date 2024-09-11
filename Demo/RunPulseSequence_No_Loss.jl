@@ -38,7 +38,7 @@ end
 
 Mode3 = SC.Transmon_Resonators_Loader("ModelSaves/Mode_3/Mode_3.json");
 
-solver_kwargs = Dict{Any, Any}("reltol" => 1e-8, "abstol" => 1e-8, "tol"=>1e-8)
+solver_kwargs = Dict{Any, Any}()#("reltol" => 1e-8, "abstol" => 1e-8, "tol"=>1e-8)
 ψ = Mode3.dressed_states[(0,0)]
 ρ = ψ*ψ'
 start_time = now()

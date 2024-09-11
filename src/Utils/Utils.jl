@@ -4,6 +4,8 @@ include("RunOperatorSequence.jl")
 include("Floquet.jl")
 include("StateTracking.jl")
 include("PulseFinder.jl")
+include("TimeEvolutionUtils.jl")
+include("PlotStateEvolution.jl")
 #include("RunExperiment.jl")
 
 

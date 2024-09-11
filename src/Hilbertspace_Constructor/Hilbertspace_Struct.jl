@@ -7,6 +7,7 @@ export HilbertSpace
     Components :: Dict
     Interactions :: Vector
     𝕀̂_Dict :: Dict
+    𝕀̂ :: qo.Operator
     Ĥ :: qo.Operator
 
     dressed_states :: Dict

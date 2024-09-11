@@ -16,6 +16,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 YAXArrays = "c21b50f5-aa40-41ea-b809-c0f5e47bfa5c"
 DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 LsqFit = "2fda8390-95c7-5789-9bda-21331edee243"
+OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 
 [compat]
 julia = "1.6.7"

@@ -75,7 +75,16 @@ function Hilbertspace_Constructor(Components, Interactions; order = [])
         dressed_energies[state.-1] = dressed_eigsys[1][max_idx]
     end
 
+    𝕀̂_vec = []
+    for i in order
+        push!(𝕀̂_vec, 𝕀̂_Dict[i])
+    end
 
-    return HilbertSpace(Components=Components, Interactions = Interactions, 𝕀̂_Dict =𝕀̂_Dict, Ĥ = Ĥ, dressed_states = dressed_states, dressed_energies = dressed_energies)
+    if length(𝕀̂_vec) == 1
+        𝕀̂ = 𝕀̂_vec[1]
+    else
+        𝕀̂ = qo.tensor(𝕀̂_vec...)
+    end
+    return HilbertSpace(Components=Components, Interactions = Interactions, 𝕀̂_Dict =𝕀̂_Dict, Ĥ = Ĥ, dressed_states = dressed_states, dressed_energies = dressed_energies, 𝕀̂ = 𝕀̂)
 
 end

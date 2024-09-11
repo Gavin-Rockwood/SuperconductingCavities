@@ -1,4 +1,3 @@
-
 export Get_Drive_Hamiltonian, Get_Drive_Hamiltonian_With_Envelope, f_for_schroedinger_dynamic, f_for_schroedinger_dynamic, f_for_master_dynamic
 
 function Get_Drive_Hamiltonian(model, op, ν, ε)
@@ -20,7 +19,7 @@ function Get_Envelope(envelope_name, envelope_kwargs)
     return envelope
 end
 
-function f_for_schroedinger_dynamic(model, op, ν, ε; envelope_name = "Square Envelope", envelope_kwargs = Dict{Any, Any}())
+function f_for_schroedinger_dynamic(model, op, ν, ε; envelope_name = "Square", envelope_kwargs = Dict{Any, Any}())
     
     envelope = Get_Envelope(envelope_name, envelope_kwargs)
 
@@ -30,7 +29,7 @@ function f_for_schroedinger_dynamic(model, op, ν, ε; envelope_name = "Square E
     return (t, ψ) -> 2*pi*(ε*envelope(t)*sin(2*π*ν*t)*op+Ĥ)
 end
 
-function f_for_master_dynamic(model, op, ν, ε; c_ops = [], envelope_name = "Square Envelope", envelope_kwargs = Dict{Any, Any}())
+function f_for_master_dynamic(model, op, ν, ε; c_ops = [], envelope_name = "Square", envelope_kwargs = Dict{Any, Any}())
     
     envelope = Get_Envelope(envelope_name, envelope_kwargs)
 

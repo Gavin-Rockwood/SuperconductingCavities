@@ -1,20 +1,18 @@
 import QuantumOptics as qo
+import OrdinaryDiffEq as ODE
 
 export Get_Floquet_t0_eigsys, Floquet_0_Sweep
 
-function Get_Floquet_t0_eigsys(Ĥₜ, T; N_Steps = 100)
-    δt = T/N_Steps
+function Get_Floquet_t0_eigsys(f, T)
+    
+    FloqOp = qo.dense(qo.identityoperator(qo.basis(f(0,0))))
+    
+    tspan = collect(LinRange(0, T, 2))
 
-    FloqOp = qo.dense(qo.identityoperator(qo.basis(Ĥₜ(0))))
+    res = qo.timeevolution.schroedinger_dynamic(tspan, FloqOp, f, alg = ODE.Vern9())
 
-    t = 0
-    for i in 1:N_Steps
-        t += δt
-        FloqOp = qo.exp(qo.dense(-1im*Ĥₜ(t)*δt))*FloqOp
-    end
-
-    λs, λ⃗s = qo.eigenstates(qo.dense(FloqOp), warning = false)
-    λs = imag(log.(λs))
+    λs, λ⃗s = qo.eigenstates(res[2][end], warning = false)
+    λs = -angle.(λs)/T#imag(log.(λs))
     return λs, λ⃗s
 end
 
@@ -27,8 +25,10 @@ function Floquet_0_Sweep(model, drive_op, list_of_params; Floq_N_Steps = 100)
     @info "Beginning Floquet Sweep"
     for i in 1:STEPS
         @debug "On Param Set Number $i"
-        Ĥₜ = Get_Drive_Hamiltonian(model, drive_op, list_of_params[i]["ν"], list_of_params[i]["ε"])#*2*pi
-        λs, λ⃗s = Get_Floquet_t0_eigsys(Ĥₜ, 1/list_of_params[i]["ν"], N_Steps = Floq_N_Steps)
+        #Ĥₜ = Get_Drive_Hamiltonian(model, drive_op, list_of_params[i]["ν"], list_of_params[i]["ε"])#*2*pi
+        #λs, λ⃗s = Get_Floquet_t0_eigsys(Ĥₜ, 1/list_of_params[i]["ν"], N_Steps = Floq_N_Steps)
+        f = f_for_schroedinger_dynamic(model, drive_op, list_of_params[i]["ν"], list_of_params[i]["ε"])
+        λs, λ⃗s = Get_Floquet_t0_eigsys(f, 1/list_of_params[i]["ν"])
 
         push!(F_Energies, λs)
         push!(F_Modes, λ⃗s)

@@ -4,7 +4,7 @@ using DimensionalData
 import LsqFit as LF
 import CairoMakie as cm
 
-function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; make_plot = false, Floq_N_Steps = 50)
+function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; make_plot = false)
     ν = model.dressed_energies[state2]- model.dressed_energies[state1]
 
     νs = ν .+ starkshift_list
@@ -18,7 +18,7 @@ function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; ma
         push!(arg_list, arg_dict)
     end
 
-    floq_sweep_res = Floquet_0_Sweep(model, drive_op, arg_list, Floq_N_Steps = Floq_N_Steps)
+    floq_sweep_res = Floquet_0_Sweep(model, drive_op, arg_list)
 
     states_to_track = Dict{Any, Any}()
 
@@ -56,6 +56,8 @@ function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; ma
     p0[2] = minimum(difs)
     p0[3] = abs((maximum(difs)-minimum(difs))/(x[argmax(difs)]-x[argmin(difs)]))
     fit = LF.curve_fit(to_fit, x, difs, p0)
+
+    @info "Fit Stuff: "*tostr(fit.param)
     
     if make_plot 
         f = cm.Figure(size = (800, 500), px_per_unit = 3)
@@ -72,15 +74,7 @@ function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; ma
 
         for i in 1:length(dims(tracking_res, :State))
             state = dims(tracking_res, :State)[i]
-            y = []
-            for step in dims(tracking_res, :Step)
-                val = tracking_res[State = At(state), Step = At(step)]["F_Energies"]/pi
-                if val < 0
-                    val += 2*abs(νs[step])
-                end
-                push!(y, val)
-            end
-            cm.scatterlines!(ax1, x, y, label = state, color = colorlist[i], marker = markers[i], linewidth = 0.5, markersize = 20)
+            cm.scatterlines!(ax1, x, ys[i], label = state, color = colorlist[i], marker = markers[i], linewidth = 0.5, markersize = 20)
             #cm.lines!(ax1, x, y, color = colorlist[i], linewidth = 0.5)
         end
         cm.axislegend(ax1)
@@ -96,7 +90,62 @@ function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; ma
         cm.display(f)
     end
     
-    return [fit.param[1], 1/fit.param[2]]
+    return [fit.param[1], 1/(fit.param[2]*fit.param[3])]
     
+
+end
+
+function OptimizePulse(model, ψ1, ψ2, ε, freq_d, stark_shift, t_range, envelope, envelope_args; levels = 5, samples_per_level = 5, solver_kwargs = Dict{Any, Any}(), spps = 5)
+    drive_args = Dict{Any, Any}("pulse_time" => 0.0, "epsilon" => ε, "Envelope" => envelope, "shift"=>stark_shift, "freq_d"=>freq_d)
+    drive_args["Envelope Args"] = envelope_args
+    
+    ti = t_range[1]
+    tf = t_range[2]
+    tspan = LinRange(ti, tf, samples_per_level)
+    level_res = []
+    for level in 1:levels
+        @info "On Level $level"
+        tspan = LinRange(ti, tf, samples_per_level)
+
+        level_res = []
+        for i in 1:length(tspan)
+            t = tspan[i]
+            @info "On Step $i: t = $t"
+            drive_args["pulse_time"] = t
+            if "pulse_time" in keys(drive_args["Envelope Args"])
+                drive_args["Envelope Args"]["pulse_time"] = t
+            end
+
+            run_res = RunSingleOperator(model, ψ1, drive_args, to_return = "Last WF", save_step = false, solver_kwargs = solver_kwargs, spps = spps, step_name = "Level_"*string(level)*"_step_"*string(i))
+            
+            push!(level_res, abs(run_res'*ψ2)^2) 
+        end
+        
+        max_loc = argmax(level_res)
+        
+        @info "Results for level $level: "*tostr(level_res)
+        if max_loc == 1
+            ti = tspan[1]
+        else
+            ti = tspan[max_loc - 1]
+        end
+        
+        if max_loc == length(tspan)
+            tf = tspan[end]
+        else
+            tf = tspan[max_loc+1]
+        end
+        @info "New ti: $ti, new tf: $tf"
+        @info "\n------------------------------------------------------------------------------\n"
+    end
+
+    opt_drive_time = tspan[argmax(level_res)]
+
+    drive_args["pulse_time"] = opt_drive_time
+    if "pulse_time" in keys(drive_args["Envelope Args"])
+        drive_args["Envelope Args"]["pulse_time"] = opt_drive_time
+    end
+
+    return drive_args
 
 end

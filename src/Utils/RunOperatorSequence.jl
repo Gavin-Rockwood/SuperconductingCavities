@@ -2,6 +2,7 @@ import QuantumOptics as qo
 using YAXArrays
 using Dates
 using NetCDF
+import OrdinaryDiffEq as ODE
 
 function RunSingleOperator(model::Transmon_Resonators, ψ:: qo.Ket, op_params; spps = 5, solver_kwargs = Dict{Any, Any}(), save_step = true, step_name = "DEFAULT", to_return = "All WFs", save_path = "Data/", run_name = "", save_as_seperate_file = false)
     step_name = replace(step_name, " " => "_")
@@ -17,19 +18,22 @@ function RunSingleOperator(model::Transmon_Resonators, ψ:: qo.Ket, op_params; s
     end
 
     if !("reltol" in keys(solver_kwargs))
-        solver_kwargs["reltol"] = 1e-8
+        solver_kwargs["reltol"] = 1e-4
     end
     if !("abstol" in keys(solver_kwargs))
-        solver_kwargs["abstol"] = 1e-8
+        solver_kwargs["abstol"] = 1e-4
     end
     if !("adaptive" in keys(solver_kwargs))
         solver_kwargs["adaptive"] = true
     end
     if !("tol" in keys(solver_kwargs))
-        solver_kwargs["tol"] = 1e-5
+        solver_kwargs["tol"] = 1e-3
     end
     if !("progress" in keys(solver_kwargs))
         solver_kwargs["progress"] = true
+    end
+    if !("alg" in keys(solver_kwargs))
+        solver_kwargs["alg"] = ODE.Vern9()
     end
     ν  = op_params["freq_d"]+op_params["shift"]
 
@@ -113,19 +117,22 @@ function RunSingleOperator(model::Transmon_Resonators, ρ:: qo.Operator, op_para
     end
 
     if !("reltol" in keys(solver_kwargs))
-        solver_kwargs["reltol"] = 1e-8
+        solver_kwargs["reltol"] = 1e-4
     end
     if !("abstol" in keys(solver_kwargs))
-        solver_kwargs["abstol"] = 1e-8
+        solver_kwargs["abstol"] = 1e-4
     end
     if !("adaptive" in keys(solver_kwargs))
         solver_kwargs["adaptive"] = true
     end
     if !("tol" in keys(solver_kwargs))
-        solver_kwargs["tol"] = 1e-5
+        solver_kwargs["tol"] = 1e-3
     end
     if !("progress" in keys(solver_kwargs))
         solver_kwargs["progress"] = true
+    end
+    if !("alg" in keys(solver_kwargs))
+        solver_kwargs["alg"] = ODE.Vern9()
     end
     ν  = op_params["freq_d"]+op_params["shift"]
 
