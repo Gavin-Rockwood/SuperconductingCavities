@@ -54,4 +54,4 @@ end
 SC.RunPulseSequence(Mode3, ρ, Mode3.Stuff["Drive Sequences"]["Binomial_Code"], c_ops = c_ops, run_name = "Run_Loss_"*string(with_loss)*"_"*string(now()), solver_kwargs = solver_kwargs)
 end_time = now()
 
-@info "Total Run Time: "*string(end_time - start_time)
+@info "Total Run Time: "*string(Dates.canonicalize(end_time - start_time))
