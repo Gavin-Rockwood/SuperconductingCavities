@@ -1,4 +1,4 @@
-import QuantumOptics as qo
+import QuantumToolbox as qt
 import CairoMakie as cm
 using YAXArrays
 
@@ -66,7 +66,7 @@ function ProbabilityPlotSingleModeEvolution(model, data :: Dataset; markers = ma
 
     ax = cm.Axis(f[1,1], xlabel = Axis_kwargs["xlabel"], ylabel = Axis_kwargs["ylabel"], title = Axis_kwargs["title"])
 
-    tlevels = qo.basis(model.Ĥ).shape[1]
+    tlevels = model.Ĥ.dims[1]
     cmap=(cm.cgrad(cmap_name, tlevels, categorical = true))
 
     states = data.cubes[data_keys[1]].axes[1]

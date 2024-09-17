@@ -94,8 +94,6 @@ function Transmon_Resonators_Constructor(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs;
         CandD_Ops[name*" Collapse"] = IdentityWrapper(hilbertspace, Dict(name=>Cavity_Collapse), order = order)
     end
     
-
-
     return Transmon_Resonators(params = params, hilbertspace=hilbertspace, n̂ₜ=n̂ₜ, Stuff = Dict{Any, Any}(), dressed_states = hilbertspace.dressed_states, dressed_energies = hilbertspace.dressed_energies, order = order, n̂ᵣs = n̂ᵣs, CandD_Ops = CandD_Ops, Ĥ = hilbertspace.Ĥ)
  
 end

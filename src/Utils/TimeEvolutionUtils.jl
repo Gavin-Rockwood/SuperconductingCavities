@@ -1,11 +1,14 @@
-export Get_Drive_Hamiltonian, Get_Drive_Hamiltonian_With_Envelope, f_for_schroedinger_dynamic, f_for_schroedinger_dynamic, f_for_master_dynamic
+import QuantumToolbox as qt
+import ProgressMeter as PM
+include("ExtraStuff/Envelopes.jl")
 
-function Get_Drive_Hamiltonian(model, op, ν, ε)
-    return Get_Drive_Hamiltonian_With_Envelope(model, op, ν, ε, Square_Envelope)
-end
+export Get_Drive_Coef, Get_Evelope, Get_Ĥ_D, Get_Lₜ, Propagator
 
-function Get_Drive_Hamiltonian_With_Envelope(model, op, ν, ε, envelope)
-    return t->2*pi*(ε*envelope(t)*sin(2π*ν*t)*op+model.hilbertspace.Ĥ)
+function Get_Drive_Coef(ν, ε; envelope = Square_Envelope)
+    function drive_coef(t, params...)
+        return 2*π*ε*envelope(t)*sin(2π*ν*t)
+    end
+    return drive_coef
 end
 
 function Get_Envelope(envelope_name, envelope_kwargs)
@@ -19,24 +22,31 @@ function Get_Envelope(envelope_name, envelope_kwargs)
     return envelope
 end
 
-function f_for_schroedinger_dynamic(model, op, ν, ε; envelope_name = "Square", envelope_kwargs = Dict{Any, Any}())
-    
-    envelope = Get_Envelope(envelope_name, envelope_kwargs)
+function Get_Ĥ_D(op::qt.QuantumObject, drive_coef::Union{Nothing, Function}; TDOS = true, params = nothing, init_time = 0.0)
+    drive_coef = (drive_coef isa Nothing) ? (t)->1 : drive_coef
 
-    op = qo.sparse(op)
-    Ĥ = qo.sparse(model.Ĥ)
-
-    return (t, ψ) -> 2*pi*(ε*envelope(t)*sin(2*π*ν*t)*op+Ĥ)
+    if TDOS
+        return qt.TimeDependentOperatorSum([drive_coef], [op], params = params, init_time = init_time)
+    else
+        return t -> drive_coef(t)*op
+    end
 end
 
-function f_for_master_dynamic(model, op, ν, ε; c_ops = [], envelope_name = "Square", envelope_kwargs = Dict{Any, Any}())
-    
-    envelope = Get_Envelope(envelope_name, envelope_kwargs)
+function Get_Lₜ(op, drive_coef; params = nothing, init_time = 0.0)
+    return qt.TimeDependentOperatorSum([drive_coef], [qt.liouvillian(op)], params = params, init_time = init_time)
+end
 
-    op = qo.sparse(op)
-    Ĥ = qo.sparse(model.Ĥ)
 
-    c_ops = collect(values(c_ops))
+function Propagator(HS, Ĥₜ, tf; progress_meter = false, ti = 0)
+    U = 0*eye_like(HS.Ĥ)
 
-    return (t, ψ) -> [2*pi*(ε*envelope(t)*sin(2*π*ν*t)*op+Ĥ), c_ops, qo.dagger.(c_ops)]
+    p = PM.Progress(length(HS.dressed_states), enabled = progress_meter)
+    for state in keys(HS.dressed_states)
+        ψi = HS.dressed_states[state]
+        se_res = qt.sesolve(2*π*HS.Ĥ, ψi, [ti, tf], H_t = Ĥₜ, progress_bar = false)
+        ψf = se_res.states[end]
+        U += ψf*ψi'
+        PM.next!(p)
+    end
+    return U
 end

@@ -1,4 +1,4 @@
-import QuantumOptics as qo
+import QuantumToolbox as qt
 using YAXArrays
 using DimensionalData
 import LsqFit as LF
@@ -32,7 +32,7 @@ function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; ma
     for state in dims(tracking_res, :State)
         ytemp = []
         for step in dims(tracking_res, :Step)
-            val = tracking_res[State = At(state), Step = At(step)]["F_Energies"]/pi
+            val = Real(tracking_res[State = At(state), Step = At(step)]["F_Energies"]/pi)
             if val < 0
                 val += 2*abs(νs[step])
             end
@@ -66,7 +66,7 @@ function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; ma
         ax2 = cm.Axis(f[2,1], title = "Difference", xlabel = "Stark Shifts", ylabel = "Dif (GHz)")
 
 
-        x = collect(νs.-ν)
+        x = Real.(collect(νs.-ν))
         y = []
 
         colorlist = [:forestgreen, :coral]

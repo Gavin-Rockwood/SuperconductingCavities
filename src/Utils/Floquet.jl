@@ -1,17 +1,13 @@
-import QuantumOptics as qo
+import QuantumToolbox as qt
 import OrdinaryDiffEq as ODE
 
 export Get_Floquet_t0_eigsys, Floquet_0_Sweep
 
-function Get_Floquet_t0_eigsys(f, T)
+function Get_Floquet_t0_eigsys(HS, Ĥ_D, T)
     
-    FloqOp = qo.dense(qo.identityoperator(qo.basis(f(0,0))))
-    
-    tspan = collect(LinRange(0, T, 2))
+    U = Propagator(HS, Ĥ_D, T)
 
-    res = qo.timeevolution.schroedinger_dynamic(tspan, FloqOp, f, alg = ODE.Vern9())
-
-    λs, λ⃗s = qo.eigenstates(res[2][end], warning = false)
+    λs, λ⃗s = qt.eigenstates(U)
     λs = -angle.(λs)/T#imag(log.(λs))
     return λs, λ⃗s
 end
@@ -25,8 +21,11 @@ function Floquet_0_Sweep(model, drive_op, list_of_params)
     @info "Beginning Floquet Sweep"
     for i in 1:STEPS
         @debug "On Param Set Number $i"
-        f = f_for_schroedinger_dynamic(model, drive_op, list_of_params[i]["ν"], list_of_params[i]["ε"])
-        λs, λ⃗s = Get_Floquet_t0_eigsys(f, 1/list_of_params[i]["ν"])
+        ν = list_of_params[i]["ν"]
+        ε = list_of_params[i]["ε"]
+        drive_coef = Get_Drive_Coef(ν, ε)
+        Ĥ_D = Get_Ĥ_D(drive_op, drive_coef)
+        λs, λ⃗s = Get_Floquet_t0_eigsys(model.hilbertspace, Ĥ_D, 1/ν)
 
         push!(F_Energies, λs)
         push!(F_Modes, λ⃗s)

@@ -1,4 +1,4 @@
-import QuantumOptics as qo
+import QuantumToolbox as qt
 using LinearAlgebra
 #using ProtoStructs
 
@@ -20,7 +20,7 @@ function Hilbertspace_Constructor(Components, Interactions; order = [])
     
     𝕀̂_Dict = Dict{Any, Any}()
     for key in key_list
-        𝕀̂_Dict[key] = qo.identityoperator(Components[key].𝔹)
+        𝕀̂_Dict[key] = qt.eye(Components[key].dim)
     end
     Ĥ_comp_vec = []
     for key in key_list
@@ -41,12 +41,11 @@ function Hilbertspace_Constructor(Components, Interactions; order = [])
     end
 
     Ĥ = Ĥ_non_int+Ĥ_int
-
-    dressed_eigsys = qo.eigenstates(qo.dense(Ĥ))
+    λ_dressed, ψ_dressed = qt.eigenstates(Ĥ)
 
     dims = []
     for key in key_list
-        push!(dims, size(Components[key].Ĥ)[1])
+        push!(dims, Components[key].dim)
     end
 
     for_iter = []
@@ -59,31 +58,31 @@ function Hilbertspace_Constructor(Components, Interactions; order = [])
     dressed_energies = Dict{Any, Any}()
 
     for state in states_to_iter
-        overlaps = zeros(length(dressed_eigsys[1]))
+        overlaps = zeros(length(ψ_dressed))
         bare_ψ_list = []
         for i in 1:length(key_list)
             key = key_list[i]
-            push!(bare_ψ_list, Components[key].eigsys[2][state[i]])
+            push!(bare_ψ_list, qt.Qobj(Components[key].eigsys.vectors[:, state[i]]))
         end
-        ψ_bare = qo.tensor(bare_ψ_list...)
+        ψ_bare = qt.tensor(bare_ψ_list...)
 
         for i in 1:length(overlaps)
-            overlaps[i] = norm((dressed_eigsys[2][i]'*ψ_bare))^2
+            overlaps[i] = norm((ψ_dressed[i]'*ψ_bare))^2
         end
         max_idx = argmax(overlaps)
-        dressed_states[state.-1] = dressed_eigsys[2][max_idx]
-        dressed_energies[state.-1] = dressed_eigsys[1][max_idx]
+        dressed_states[state.-1] = ψ_dressed[max_idx]
+        dressed_energies[state.-1] = Real(λ_dressed[max_idx])
     end
 
     𝕀̂_vec = []
-    for i in order
+    for i in key_list
         push!(𝕀̂_vec, 𝕀̂_Dict[i])
     end
 
     if length(𝕀̂_vec) == 1
         𝕀̂ = 𝕀̂_vec[1]
     else
-        𝕀̂ = qo.tensor(𝕀̂_vec...)
+        𝕀̂ = qt.tensor(𝕀̂_vec...)
     end
     return HilbertSpace(Components=Components, Interactions = Interactions, 𝕀̂_Dict =𝕀̂_Dict, Ĥ = Ĥ, dressed_states = dressed_states, dressed_energies = dressed_energies, 𝕀̂ = 𝕀̂)
 

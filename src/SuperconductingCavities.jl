@@ -1,10 +1,9 @@
 module SuperconductingCavities
 
-import QuantumOptics as qo
+import QuantumToolbox as qt
+using Revise
 using LinearAlgebra
 using JSON
-
-Base.:*(ket::qo.Ket, bra::qo.Bra) = qo.projector(ket, bra)
 
 abstract type Model end
 

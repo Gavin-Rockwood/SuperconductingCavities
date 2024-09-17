@@ -1,27 +1,11 @@
-import QuantumOptics as qo
+import QuantumToolbox as qt
 using Logging
-
-using LinearAlgebra
-using SparseArrays
-import CairoMakie as cm
-
-using ProtoStructs
-
-import QuantumOptics.⊗
-import QuantumOptics.*
-
-import CSV
-using JSON
-import Tables
-
-using YAXArrays
 
 using MiniLoggers
 using Dates
-using Revise
+
 
 import SuperconductingCavities as SC
-
 # MiniLogger(minlevel = MiniLoggers.Info) |> global_logger
 InfoLogger = MiniLogger(minlevel = MiniLoggers.Info)
 ProgressLogger = MiniLogger(minlevel = LogLevel(-1))
@@ -51,7 +35,7 @@ end
 
 @info "With Loss: $with_loss"
 
-SC.RunPulseSequence(Mode3, ρ, Mode3.Stuff["Drive Sequences"]["Binomial_Code"], c_ops = c_ops, run_name = "Run_Loss_"*string(with_loss)*"_"*string(now()), solver_kwargs = solver_kwargs)
+SC.RunPulseSequence(Mode3, ρ, Mode3.Stuff["Drive Sequences"]["Binomial_Code"], c_ops = c_ops, run_name = "Run_Loss_"*string(with_loss)*"_"*string(now()), solver_kwargs = solver_kwargs, spps = 0.5)
 end_time = now()
 
 @info "Total Run Time: "*string(Dates.canonicalize(end_time - start_time))
