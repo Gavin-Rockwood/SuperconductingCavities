@@ -1,5 +1,6 @@
 import QuantumToolbox as qt
 import ProgressMeter as PM
+using OrdinaryDiffEqVerner: Vern9
 include("ExtraStuff/Envelopes.jl")
 
 export Get_Drive_Coef, Get_Evelope, Get_Ĥ_D, Get_Lₜ, Propagator
@@ -43,7 +44,7 @@ function Propagator(HS, Ĥₜ, tf; progress_meter = false, ti = 0)
     p = PM.Progress(length(HS.dressed_states), enabled = progress_meter)
     for state in keys(HS.dressed_states)
         ψi = HS.dressed_states[state]
-        se_res = qt.sesolve(2*π*HS.Ĥ, ψi, [ti, tf], H_t = Ĥₜ, progress_bar = false)
+        se_res = qt.sesolve(2*π*HS.Ĥ, ψi, [ti, tf], H_t = Ĥₜ, progress_bar = false, alg = Vern9())
         ψf = se_res.states[end]
         U += ψf*ψi'
         PM.next!(p)

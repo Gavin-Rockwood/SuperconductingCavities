@@ -4,6 +4,7 @@ using Dates
 using NetCDF
 import OrdinaryDiffEq as ODE
 import ProgressMeter as PM
+using OrdinaryDiffEqVerner: Vern9
 
 function RunSingleOperator(model::Transmon_Resonators, 
     ψ::qt.QuantumObject{<:AbstractVector{T1},qt.KetQuantumObject}, 
@@ -13,17 +14,17 @@ function RunSingleOperator(model::Transmon_Resonators,
     save_step = false, 
     step_name = "DEFAULT", 
     op_name = "DEFAULT", 
-    to_return = "All WFs", 
+    to_return = "All", 
     save_path = "Data/", 
     run_name = "", 
     save_as_seperate_file = false, 
-    tspan = [], 
-    overlaps_progbar = true
+    tspan = [],
+    other_ds_properties = Dict{Any, Any}()
     ) where T1<:Number
     #-------------------------------------------------------------
 
     step_name = replace(step_name, " " => "_")
-    to_return_vals = ["All WFs", "Last WF", "Overlaps", "Nothing"]
+    to_return_vals = ["All", "Last", "Nothing"]
     if !(to_return in to_return_vals)
         println("to_return (\"$to_return\") not one of the accepted values: ")
         for val in to_return_vals
@@ -33,6 +34,10 @@ function RunSingleOperator(model::Transmon_Resonators,
     end
     if run_name == ""
         run_name = "Single_Operator_Run_"*string(now())
+    end
+
+    if !("alg" in keys(solver_kwargs))
+        solver_kwargs["alg"] = Vern9()
     end
 
     ν  = op_params["freq_d"]+op_params["shift"]
@@ -59,56 +64,40 @@ function RunSingleOperator(model::Transmon_Resonators,
     @info "Time Evolution Complete"
     sleep(0.01)
 
-    if (save_step) | (to_return == "Overlaps")
-        @info "Getting Overlaps"
+    if (save_step) | (to_return == "DS")
+        @info "Saving Steps"
         sleep(0.01)
-        states = string.(collect(keys(model.dressed_states)))
-        steps_symbol = Symbol(step_name*"_Steps")
-        axlist = (Dim{:State}(states), Dim{steps_symbol}(collect(0:length(res.times)-1)), Dim{:Comp}(["Re", "Im"]))
         
-        properties = Dict{Any, Any}("Data"=>"Overlaps", "Time"=>string(now()), "Times" => res.times, "Operator" => op_name)
-        data = zeros(size(axlist))
-
-        ds_properties = Dict{Any, Any}("Basis Shape" => collect(model.hilbertspace.Ĥ.dims), "Data"=>"Wave Function Amplitudes", "Solver_Args" => string(solver_kwargs))
-        overlaps = Dataset(; Symbol(step_name) => YAXArray(axlist, data, properties), properties = ds_properties)
-
-        coords = Iterators.product(axlist...)
-        @debug print(tostr(overlaps.cubes[Symbol(step_name)]))
-        p = PM.Progress(length(coords), enabled = overlaps_progbar)
-        for coord in coords            
-            state = coord[1]
-            step = coord[2]
-            ψt = res.states[step+1]
-            ψ = model.dressed_states[eval(Meta.parse(state))]
-            overlap = ψ'*ψt
-            overlaps.cubes[Symbol(step_name)][At.([state, step, "Re"])...] = real(overlap)
-            overlaps.cubes[Symbol(step_name)][At.([state, step, "Im"])...] = imag(overlap)
-            PM.next!(p)
+        properties = Dict{Any, Any}("Data"=>"Wave Functions", "Time"=>string(now()), "Times" => res.times, "Operator" => op_name)
+        
+        ds_properties = Dict{Any, Any}("dims" => collect(model.hilbertspace.Ĥ.dims), "Data"=>"Wave Functions", "Solver_Args" => string(solver_kwargs))
+        for key in keys(other_ds_properties)
+            ds_properties[key] = other_ds_properties[key]
         end
-    end
+        
+        ds = Qobj_List_To_DS(res.states; cube_name = Symbol(step_name), cube_properties = properties, ds_properties = ds_properties, step_name = Symbol(step_name*"_steps"))
+        println(tostr(ds))
+        
+        if save_step
+            file_name = save_path*run_name
+            if save_as_seperate_file
+                file_name = file_name*step_name
+            end
 
-    if save_step
-        file_name = save_path*run_name
-        if save_as_seperate_file
-            file_name = file_name*step_name
+            if !isdir(save_path)
+                @info "Making Save Directory $save_path"
+                mkdir(save_path)
+            end
+            savedataset(ds,path = file_name*".nc", append = true)
         end
-
-
-        if !isdir(save_path)
-            @info "Making Save Directory $save_path"
-            mkdir(save_path)
-        end
-        savedataset(overlaps,path = file_name*".nc", append = true)
     end
 
     @info "Done with $step_name"
 
-    if to_return == "All WFs"
+    if to_return == "All"
         return res
-    elseif to_return == "Last WF"
+    elseif to_return == "Last"
         return res.states[end]
-    elseif to_return == "Overlaps"
-        return overlaps
     end
 end
 
@@ -121,15 +110,16 @@ function RunSingleOperator(model::Transmon_Resonators,
     save_step = false, 
     step_name = "DEFAULT", 
     op_name = "DEFAULT",
-    to_return = "All DMs", 
+    to_return = "All", 
     save_path = "Data/", 
     run_name = "", 
     save_as_seperate_file = false, 
-    tspan = []
+    tspan = [],
+    other_ds_properties = Dict{Any, Any}()
     ) where T1<:Number
     #-------------------------------------------------------------
     step_name = replace(step_name, " " => "_")
-    to_return_vals = ["All DMs", "Last DM", "Probabilities"]
+    to_return_vals = ["All", "Last", "Nothing", "DS"]
     if !(to_return in to_return_vals)
         println("to_return (\"$to_return\") not one of the accepted values: ")
         for val in to_return_vals
@@ -139,6 +129,10 @@ function RunSingleOperator(model::Transmon_Resonators,
     end
     if run_name == ""
         run_name = "Single_Operator_Run_"*string(now())
+    end
+
+    if !("alg" in keys(solver_kwargs))
+        solver_kwargs["alg"] = Vern9()
     end
 
     ν  = op_params["freq_d"]+op_params["shift"]
@@ -161,52 +155,39 @@ function RunSingleOperator(model::Transmon_Resonators,
     @info "Time Evolution Complete"
     sleep(0.01)
 
-    if (save_step) | (to_return == "Probabilities")
-        @info "Getting Probabilities"
+    if (save_step) | (to_return == "DS")
+        @info "Saving Steps"
         sleep(0.01)
-        states = string.(collect(keys(model.dressed_states)))
-        steps_symbol = Symbol(step_name*"_Steps")
-        axlist = (Dim{:State}(states), Dim{steps_symbol}(collect(0:length(res.times)-1)))
         
-        properties = Dict{Any, Any}("Data"=>"Probabilities", "Time"=>string(now()), "Times" => res.times, "Operator" => op_name)
-        data = zeros(size(axlist))
+        properties = Dict{Any, Any}("Data"=>"Density Matrices", "Time"=>string(now()), "Times" => res.times, "Operator" => op_name)
         
-        ds_properties = Dict{Any, Any}("Basis Shape" => collect(model.hilbertspace.Ĥ.dims), "Data"=>"Probabilities From Density Matrix", "Solver_Args"=>string(solver_kwargs))
-        probabilities = Dataset(; Symbol(step_name) => YAXArray(axlist, data, properties), properties = ds_properties)
+        ds_properties = Dict{Any, Any}("dims" => collect(model.hilbertspace.Ĥ.dims), "Data"=>"Density Matrices", "Solver_Args" => string(solver_kwargs))
+        
+        ds = Qobj_List_To_DS(res.states; cube_name = Symbol(step_name), cube_properties = properties, ds_properties = ds_properties, step_name = Symbol(step_name*"_steps"))
+        
+        for key in keys(other_ds_properties)
+            ds_properties[key] = other_ds_properties[key]
+        end
 
-        coords = Iterators.product(axlist...)
-        for coord in coords            
-            state = coord[1]
-            step = coord[2]
-            ρt = res.states[step+1]
-            ψ = model.dressed_states[eval(Meta.parse(state))]
-            probability = abs(ψ'*ρt*ψ)
-            probabilities.cubes[Symbol(step_name)][At.([state, step])...] = probability
+        if save_step
+            file_name = save_path*run_name
+            if save_as_seperate_file
+                file_name = file_name*step_name
+            end
+
+            if !isdir(save_path)
+                @info "Making Save Directory $save_path"
+                mkdir(save_path)
+            end
+            savedataset(ds,path = file_name*".nc", append = true)
         end
     end
-
-
-    if save_step
-        file_name = save_path*run_name
-        if save_as_seperate_file
-            file_name = file_name*step_name
-        end
-
-
-        if !isdir(save_path)
-            @info "Making Save Directory $save_path"
-            mkdir(save_path)
-        end
-        savedataset(probabilities,path = file_name*".nc", append = true)
-    end
-
+    
     @info "Done with $step_name"
     if to_return == "All DMs"
         return res
     elseif to_return == "Last DM"
         return res.states[end]
-    elseif to_return == "Probabilities"
-        return probabilities
     end
 end
 
@@ -219,15 +200,20 @@ function RunPulseSequence(model::Transmon_Resonators,
     save_path = "Data/"
     ) where T1<:Number
     #-------------------------------------------------------------
-    
     if run_name == ""
         run_name = "Operator_Sequence_"*string(now())
     end
-
+    cube_order = ""
+    for i in 1:length(op_sequence)
+        step_name = "Step_"*string(i)
+        cube_order = cube_order*" "*step_name
+    end
+    other_ds_properties = Dict{Any, Any}("Order" => cube_order)
     for i in 1:length(op_sequence)
         op = op_sequence[i]
         @info "Running operator $op"
-        ψ = RunSingleOperator(model, ψ, model.Stuff["op_drive_params"][op]; spps = spps, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = "Step_"*string(i), to_return = "Last WF", save_step = true, op_name = op)
+        step_name = "Step_"*string(i)
+        ψ = RunSingleOperator(model, ψ, model.Stuff["op_drive_params"][op]; spps = spps, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = step_name, to_return = "Last", save_step = true, op_name = op, other_ds_properties = other_ds_properties)
     end
 end
 
@@ -245,11 +231,18 @@ function RunPulseSequence(model::Transmon_Resonators,
     if run_name == ""
         run_name = "Operator_Sequence_"*string(now())
     end
+    cube_order = ""
+    for i in 1:length(op_sequence)
+        step_name = "Step_"*string(i)
+        cube_order = cube_order*" "*step_name
+    end
+    other_ds_properties = Dict{Any, Any}("Order" => cube_order)
 
     for i in 1:length(op_sequence)
         op = op_sequence[i]
         @info "Running operator $op"
-        ρ = RunSingleOperator(model, ρ, model.Stuff["op_drive_params"][op]; spps = spps, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = "Step_"*string(i), to_return = "Last DM", c_ops = c_ops, save_step = true, op_name = op)
+        step_name = "Step_"*string(i)
+        ρ = RunSingleOperator(model, ρ, model.Stuff["op_drive_params"][op]; spps = spps, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = step_name, to_return = "Last", c_ops = c_ops, save_step = true, op_name = op, other_ds_properties = other_ds_properties)
     end
 end
 

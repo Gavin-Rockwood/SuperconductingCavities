@@ -71,14 +71,14 @@ function Transmon_Resonators_Constructor(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs;
 
     Transmon_Dephasing = 0*Components["Transmon"].Ĥ
     for i in 0:(Nₜ-1)
-        Transmon_Dephasing+=sqrt(κᵗᵈ)*(i-1)*qt.projection(Components["Transmon"].dim, i, i)
+        Transmon_Dephasing+=sqrt(κᵗᵈ)*(i)*qt.projection(Components["Transmon"].dim, i, i)
     end
     CandD_Ops["Transmon Dephasing"] = IdentityWrapper(hilbertspace, Dict("Transmon"=>Transmon_Dephasing), order = order)
 
     Transmon_Collapse = 0*Components["Transmon"].Ĥ
     for i in 0:Nₜ-2
         ip1 = i+1
-        Transmon_Collapse+=sqrt(κᵗᶜ)*(ip1 - 1)*qt.projection(Components["Transmon"].dim, i, ip1)
+        Transmon_Collapse+=sqrt(κᵗᶜ)*(ip1)*qt.projection(Components["Transmon"].dim, i, ip1)
     end
     CandD_Ops["Transmon Collapse"] = IdentityWrapper(hilbertspace, Dict("Transmon"=>Transmon_Collapse), order = order)
 
@@ -89,7 +89,7 @@ function Transmon_Resonators_Constructor(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs;
             ip1 = i+1
             ψi = qt.fock(Components[name].dim, i-1)
             ψip1 = qt.fock(Components[name].dim, i-1+1)
-            Cavity_Collapse += sqrt(κᶜᶜ)*(ip1-1)*ψi*ψip1'
+            Cavity_Collapse += sqrt(κᶜᶜ)*(ip1)*ψi*ψip1'
         end
         CandD_Ops[name*" Collapse"] = IdentityWrapper(hilbertspace, Dict(name=>Cavity_Collapse), order = order)
     end
