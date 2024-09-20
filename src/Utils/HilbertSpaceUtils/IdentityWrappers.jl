@@ -22,7 +22,7 @@ function IdentityWrapper(𝕀̂_Dict::Dict, Operator_Dict; order = [])
         push!(op_vec, op_Dict[key_list[i]])
     end
 
-    return qo.tensor(op_vec...)
+    return qt.tensor(op_vec...)
 end
 
 function IdentityWrapper(hilbertspace::HilbertSpace, Operator_Dict; order = [])
@@ -42,5 +42,5 @@ function IdentityWrapper(hilbertspace::HilbertSpace, Operator_Dict; order = [])
         push!(op_vec, op_Dict[key_list[i]])
     end
 
-    return qo.tensor(op_vec...)
+    return qt.tensor(op_vec...)
 end

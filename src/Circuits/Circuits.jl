@@ -1,6 +1,4 @@
-include("Transmon_Resonators_Constructor.jl")
-include("ExtraStuff/Envelopes.jl")
-include("ExtraStuff/TimeEvolutionUtils.jl")
+include("Circuit_Types/Transmon_Resonators.jl")
 
 
 Circuit_Constructors = Dict{Any, Any}()

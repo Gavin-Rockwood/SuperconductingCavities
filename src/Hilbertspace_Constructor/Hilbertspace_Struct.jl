@@ -1,4 +1,4 @@
-import QuantumOptics as qo
+import QuantumToolbox as qt
 using ProtoStructs
 
 export HilbertSpace
@@ -7,7 +7,8 @@ export HilbertSpace
     Components :: Dict
     Interactions :: Vector
     𝕀̂_Dict :: Dict
-    Ĥ :: qo.Operator
+    𝕀̂ :: qt.QuantumObject
+    Ĥ :: qt.QuantumObject
 
     dressed_states :: Dict
     dressed_energies :: Dict

@@ -1,4 +1,4 @@
-import QuantumOptics as qo
+import QuantumToolbox as qt
 using LinearAlgebra
 #using ProtoStructs
 
@@ -8,25 +8,22 @@ export Resonator, Init_Resonator
     name :: String
     E :: Float64
     N :: Int
+    dim :: Int
 
-    𝔹 :: qo.FockBasis{Int64}
-    Ĥ :: qo.Operator
-    â :: qo.Operator
-    N̂ :: qo.Operator
+    Ĥ :: qt.QuantumObject
+    â :: qt.QuantumObject
+    N̂ :: qt.QuantumObject
 
-    eigsys :: Tuple
+    eigsys :: qt.EigsolveResult
 end
 
 function Init_Resonator(E, N, name)
-    𝔹 = qo.FockBasis(N-1)
 
-    â = qo.destroy(𝔹)
+    â = qt.destroy(N)
     N̂ = â'*â
     Ĥ = E*N̂
 
-    eigsys = qo.eigenstates(qo.dense(Ĥ))
+    eigsys = qt.eigenstates(Ĥ)
 
-    return Resonator(E = E, N = N, name = name, 𝔹 = 𝔹, Ĥ = Ĥ, N̂ = N̂, eigsys = eigsys, â = qo.destroy(𝔹))
-
-
+    return Resonator(E = E, N = N, dim = N, name = name, Ĥ = Ĥ, N̂ = N̂, eigsys = eigsys, â = â)
 end
