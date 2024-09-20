@@ -100,7 +100,7 @@ end
 
 function Transmon_Resonators_Loader_Python(file)
     #saved_dict = JSON.parsefile(file)
-    saved_dict = JSON3.read(file)
+    saved_dict = JSON3.read(file, Dict{Any, Any})
     Eᶜ = saved_dict["Main_Config"]["E_C"]
     Eʲ = saved_dict["Main_Config"]["E_J"]
     Eᵒˢᶜs = saved_dict["Main_Config"]["E_osc"]
@@ -178,7 +178,7 @@ end
 
 function Transmon_Resonators_Loader(file)
     #saved_dict = JSON.parsefile(file)
-    saved_dict = JSON3.read(file)
+    saved_dict = JSON3.read(file, Dict{Any, Any})
     
     Eᶜ = saved_dict["Main_Config"]["E_C"]
     Eʲ = saved_dict["Main_Config"]["E_J"]
