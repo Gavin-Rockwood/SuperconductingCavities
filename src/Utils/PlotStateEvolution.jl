@@ -4,8 +4,25 @@ using YAXArrays
 
 markers = ['+', '×', '∘', '⋆', '▿', '▵', '⊲', '⊳', '⏣', '⭔']
 
+function Get_Projection_Ops(dict_of_wavefunctions)
+    res = deepcopy(dict_of_wavefunctions)
+    map!(x -> x*x', values(res))
+    return res
+end
 
-function ProbabilityPlotSingleModeEvolution(model, data :: Dataset; markers = markers, plot_every = 10, figure_kwargs = Dict{Any, Any}(), Axis_kwargs = Dict{Any, Any}(), cmap_name = :jet1, scatterlines_kwargs = Dict{Any, Any}())
+
+function Get_EVs(list_of_states, dict_of_operators)
+    res = Dict{Any, Any}()
+
+    for key in keys(dict_of_operators)
+        op = dict_of_operators[key]
+
+        res[key] = [qt.expect(op, ψ) for ψ in list_of_states]
+    end
+    return res
+end
+
+function PlotSingleModeEvolution(model, tlist, state_hist; markers = markers, plot_every = 1, figure_kwargs = Dict{Any, Any}(), Axis_kwargs = Dict{Any, Any}(), cmap_name = :jet1, scatterlines_kwargs = Dict{Any, Any}(), show_thresh = 1e-3)
 
     if !("size" in keys(figure_kwargs))
         figure_kwargs["size"] = (1000, 500)
@@ -34,32 +51,22 @@ function ProbabilityPlotSingleModeEvolution(model, data :: Dataset; markers = ma
         scatterlines_kwargs["linewidth"] = 0.2
     end
 
+    # if !(:orientation in keys(legend_kwargs))
+    #     legend_kwargs[:orientation] = :vertical
+    # end
+    # if !(:position in keys(legend_kwargs))
+    #     legend_kwargs[:position] = :ct
+    # end
 
-    stepped = true
-    if !(:Step_1 in keys(data.cubes))
-        stepped = false
+
+    
+    if typeof(state_hist) <: Dict
+        EVs = state_hist
+    else
+        proj_dict = Get_Projection_Ops(model.dressed_states)
+        EVs = Get_EVs(state_hist, proj_dict)
     end
-    t0 = 0
-    times = []
-    ys = []
-    data_keys = collect(keys(data.cubes))
-    @info "Organizing Data"
-    for i in 1:length(data.cubes)
-        #@info "On Step $i"
-        if stepped
-            step_sym = Symbol("Step_$i")
-        else
-            step_sym = data_keys[i]
-        end
-        times = [times; t0 .+ data.cubes[step_sym].properties["Times"]]
-        t0 = times[end]
-        temp_data = collect(data.cubes[step_sym].data)
-        if !(dims(data.cubes[step_sym], :Comp) == nothing)
-            temp_data = temp_data[:, :, 1].^2+temp_data[:, :, 2].^2
-        end
-        push!(ys, temp_data)
-    end
-    ys = cat(ys...; dims = 2); 
+    
 
     @info "Making Plot"
     f = cm.Figure(size = figure_kwargs["size"], figure_padding = figure_kwargs["figure_padding"], px_per_unit = figure_kwargs["px_per_unit"])
@@ -67,31 +74,45 @@ function ProbabilityPlotSingleModeEvolution(model, data :: Dataset; markers = ma
     ax = cm.Axis(f[1,1], xlabel = Axis_kwargs["xlabel"], ylabel = Axis_kwargs["ylabel"], title = Axis_kwargs["title"])
 
     tlevels = model.Ĥ.dims[1]
+    clevels = model.Ĥ.dims[2]
     cmap=(cm.cgrad(cmap_name, tlevels, categorical = true))
 
-    states = data.cubes[data_keys[1]].axes[1]
-    for i in 1:length(states)
-        t = eval(Meta.parse(states[i]))[1]
-        c = eval(Meta.parse(states[i]))[2]
-        x = times[1:plot_every:end]
-        y = ys[i, :][1:plot_every:end]
+    #return(EVs)
 
-        cm.scatterlines!(ax, x, y, marker = markers[t+1], color = cmap[c+1], markersize = scatterlines_kwargs["markersize"], linewidth = scatterlines_kwargs["linewidth"])
+    for t in 0:(tlevels-1)
+        for c in 0:(clevels-1)
+            state = (t, c)
+            x = tlist[1:plot_every:end]
+            y = EVs[state][1:plot_every:end]
+            label = nothing
+            if c == 1
+                label = string(t)
+            end
+            alpha = 1
+            if maximum(abs.(y)) < show_thresh
+                alpha = 0.0
+            end
+            cm.scatterlines!(ax, x, real.(y), marker = markers[t+1], color = (cmap[c+1], alpha), markersize = scatterlines_kwargs["markersize"], linewidth = scatterlines_kwargs["linewidth"])
+            cm.scatterlines!(ax, x[1], real.(y)[1], marker = markers[t+1], color = (cmap[c+1]), label = label, markersize = scatterlines_kwargs["markersize"], linewidth = scatterlines_kwargs["linewidth"], visible = false)
+        end
     end
 
-    for i in 1:tlevels
-        t = i-1
-        label = string(t)
-        cm.scatterlines!(ax, [0], [0], marker = markers[t+1], color = cmap[1], label = label, markersize = scatterlines_kwargs["markersize"], linewidth = scatterlines_kwargs["linewidth"])
-    end
+    #for i in 1:tlevels
+    #    t = i-1
+    #    label = string(t)
+    #    cm.scatterlines!(ax, [0], [0], marker = markers[t+1], color = cmap[1], label = label, markersize = scatterlines_kwargs["markersize"], linewidth = scatterlines_kwargs["linewidth"])
+    #end
 
     tick_loc = collect(0:tlevels-1).+0.5
     tick_name = string.(collect(0:tlevels-1))
     cm.Colorbar(f[1,2], colormap = cmap, limits = (0,tlevels), ticks = (tick_loc, tick_name), label = "Photon Number")
 
-    cm.axislegend(ax, "Transmon Levels", orientation = :horizontal, position = :ct)
+    label = "Transmon\nLevels"
+    #if legend_kwargs[:orientation] == :vertical
+    #    label = "Transmon\nLevels"
+    #end
+    f[1,3] = cm.Legend(f, ax, label, framevisible = false)#; legend_kwargs...)#orientation = :horizontal, position = :ct)
+    cm.ylims!(ax, -0.1, 1.1)
 
     f
-
-
 end

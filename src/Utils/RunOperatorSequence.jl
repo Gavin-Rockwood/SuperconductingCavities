@@ -76,7 +76,6 @@ function RunSingleOperator(model::Transmon_Resonators,
         end
         
         ds = Qobj_List_To_DS(res.states; cube_name = Symbol(step_name), cube_properties = properties, ds_properties = ds_properties, step_name = Symbol(step_name*"_steps"))
-        println(tostr(ds))
         
         if save_step
             file_name = save_path*run_name
@@ -184,9 +183,9 @@ function RunSingleOperator(model::Transmon_Resonators,
     end
     
     @info "Done with $step_name"
-    if to_return == "All DMs"
+    if to_return == "All"
         return res
-    elseif to_return == "Last DM"
+    elseif to_return == "Last"
         return res.states[end]
     end
 end
@@ -197,12 +196,16 @@ function RunPulseSequence(model::Transmon_Resonators,
     spps = 5, 
     solver_kwargs = Dict{Any, Any}(), 
     run_name = "", 
-    save_path = "Data/"
+    save_path = "Data/",
+    Return = false,
+    clean_up = false
     ) where T1<:Number
     #-------------------------------------------------------------
     if run_name == ""
         run_name = "Operator_Sequence_"*string(now())
     end
+    println("The Name for this run is: "*run_name)
+    println("It is being saved at: "*save_path)
     cube_order = ""
     for i in 1:length(op_sequence)
         step_name = "Step_"*string(i)
@@ -214,6 +217,14 @@ function RunPulseSequence(model::Transmon_Resonators,
         @info "Running operator $op"
         step_name = "Step_"*string(i)
         ψ = RunSingleOperator(model, ψ, model.Stuff["op_drive_params"][op]; spps = spps, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = step_name, to_return = "Last", save_step = true, op_name = op, other_ds_properties = other_ds_properties)
+    end
+
+    if Return
+        dat = LoadRunResults(save_path*run_name*".nc")
+        if clean_up
+            rm(save_path*run_name*".nc")
+        end
+        return dat
     end
 end
 
@@ -231,6 +242,8 @@ function RunPulseSequence(model::Transmon_Resonators,
     if run_name == ""
         run_name = "Operator_Sequence_"*string(now())
     end
+    println("The Name for this run is: "*run_name)
+    println("It is being saved at: "*save_path)
     cube_order = ""
     for i in 1:length(op_sequence)
         step_name = "Step_"*string(i)

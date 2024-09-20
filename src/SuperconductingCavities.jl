@@ -3,7 +3,6 @@ module SuperconductingCavities
 import QuantumToolbox as qt
 using Revise
 using LinearAlgebra
-using JSON
 
 abstract type Model end
 

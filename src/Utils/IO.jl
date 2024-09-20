@@ -56,9 +56,9 @@ function LoadRunResults(file; cube_order = "Default", h_dims = "Default")
             b = now()
             PM.next!(prog)
         end
-        t += time_list[end]
+        t = time_list[end]
     end
 
-    return [state_list, time_list]
+    return Dict{Any, Any}("states" => state_list, "times" => time_list)
 
 end

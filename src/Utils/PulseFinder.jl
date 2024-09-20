@@ -4,7 +4,7 @@ using DimensionalData
 import LsqFit as LF
 import CairoMakie as cm
 
-function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; make_plot = false)
+function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; make_plot = true)
     ν = model.dressed_energies[state2]- model.dressed_energies[state1]
 
     νs = ν .+ starkshift_list
@@ -116,7 +116,7 @@ function OptimizePulse(model, ψ1, ψ2, ε, freq_d, stark_shift, t_range, envelo
                 drive_args["Envelope Args"]["pulse_time"] = t
             end
 
-            run_res = RunSingleOperator(model, ψ1, drive_args, to_return = "Last WF", save_step = false, solver_kwargs = solver_kwargs, spps = spps, step_name = "Level_"*string(level)*"_step_"*string(i))
+            run_res = RunSingleOperator(model, ψ1, drive_args, to_return = "Last", save_step = false, solver_kwargs = solver_kwargs, spps = spps, step_name = "Level_"*string(level)*"_step_"*string(i))
             
             push!(level_res, abs(run_res'*ψ2)^2) 
         end
