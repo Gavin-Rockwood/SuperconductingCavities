@@ -95,7 +95,22 @@ function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; ma
 
 end
 
-function OptimizePulse(model, ψ1, ψ2, ε, freq_d, stark_shift, t_range, envelope, envelope_args; levels = 5, samples_per_level = 5, solver_kwargs = Dict{Any, Any}(), spps = 5)
+function OptimizePulse(model, 
+    ψ1,
+    ψ2,
+    ε,
+    freq_d,
+    stark_shift,
+    t_range,
+    envelope,
+    envelope_args;
+    levels = 5,
+    samples_per_level = 5,
+    solver_kwargs = Dict{Any, Any}(),
+    spns = 5,
+    envelope_params = Dict{Any, Any}(),
+    check_op = nothing)
+    
     drive_args = Dict{Any, Any}("pulse_time" => 0.0, "epsilon" => ε, "Envelope" => envelope, "shift"=>stark_shift, "freq_d"=>freq_d)
     drive_args["Envelope Args"] = envelope_args
     
@@ -103,27 +118,48 @@ function OptimizePulse(model, ψ1, ψ2, ε, freq_d, stark_shift, t_range, envelo
     tf = t_range[2]
     tspan = LinRange(ti, tf, samples_per_level)
     level_res = []
+    list_of_drive_args = []
     for level in 1:levels
         @info "On Level $level"
         tspan = LinRange(ti, tf, samples_per_level)
 
         level_res = []
+        list_of_drive_args = []
         for i in 1:length(tspan)
             t = tspan[i]
             @info "On Step $i: t = $t"
             drive_args["pulse_time"] = t
-            if "pulse_time" in keys(drive_args["Envelope Args"])
-                drive_args["Envelope Args"]["pulse_time"] = t
+            # if "pulse_time" in keys(drive_args["Envelope Args"])
+            #     drive_args["Envelope Args"]["pulse_time"] = t
+            # end
+            # if "sigma" in keys(drive_args["Envelope Args"])
+            #     drive_args["Envelope Args"]["sigma"] = t/sigma_factor
+            # end
+            # if "mu" in keys(drive_args["Envelope Args"])
+            #     drive_args["Envelope Args"]["mu"] = t/2
+            # end
+
+            drive_args["Envelope Args"] = Envelope_Dict_Cal[drive_args["Envelope"]](t, drive_args["Envelope Args"], envelope_params)
+
+            
+            run_res = RunSingleOperator(model, ψ1, drive_args, to_return = "Last", save_step = false, solver_kwargs = solver_kwargs, spns = spns, step_name = "Level_"*string(level)*"_step_"*string(i))
+            
+            goodness = abs(run_res'*ψ2)^2
+
+            if typeof(check_op)<:qt.QuantumObject
+                goodness = abs(run_res'*check_op*run_res)
             end
 
-            run_res = RunSingleOperator(model, ψ1, drive_args, to_return = "Last", save_step = false, solver_kwargs = solver_kwargs, spps = spps, step_name = "Level_"*string(level)*"_step_"*string(i))
-            
-            push!(level_res, abs(run_res'*ψ2)^2) 
+            drive_args["accuracy"] = goodness
+            push!(list_of_drive_args, deepcopy(drive_args))
+            push!(level_res, goodness)
+            @info "Accurace: $goodness"
+            @info "------------------------------------------------------------------------------"
         end
         
         max_loc = argmax(level_res)
         
-        @info "Results for level $level: "*tostr(level_res)
+        @info "Highest Accuracy: $(level_res[max_loc])"
         if max_loc == 1
             ti = tspan[1]
         else
@@ -136,16 +172,16 @@ function OptimizePulse(model, ψ1, ψ2, ε, freq_d, stark_shift, t_range, envelo
             tf = tspan[max_loc+1]
         end
         @info "New ti: $ti, new tf: $tf"
-        @info "\n------------------------------------------------------------------------------\n"
+        @info "===================================================================================================\n"
     end
 
-    opt_drive_time = tspan[argmax(level_res)]
+    #opt_drive_time = tspan[argmax(level_res)]
 
-    drive_args["pulse_time"] = opt_drive_time
-    if "pulse_time" in keys(drive_args["Envelope Args"])
-        drive_args["Envelope Args"]["pulse_time"] = opt_drive_time
-    end
+    #drive_args["pulse_time"] = opt_drive_time
+    #if "pulse_time" in keys(drive_args["Envelope Args"])
+    #    drive_args["Envelope Args"]["pulse_time"] = opt_drive_time
+    #end
 
-    return drive_args
+    return list_of_drive_args[argmax(level_res)]
 
 end

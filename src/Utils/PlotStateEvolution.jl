@@ -21,8 +21,19 @@ function Get_EVs(list_of_states, dict_of_operators)
     end
     return res
 end
+function PlotSingleModeEvolution(model, 
+    tlist, 
+    state_hist; 
+    markers = markers,
+    plot_every = 1,
+    figure_kwargs = Dict{Any, Any}(),
+    Axis_kwargs = Dict{Any, Any}(),
+    cmap_name = :seaborn_bright,
+    scatterlines_kwargs = Dict{Any, Any}(),
+    show_thresh = 1e-3, 
+    emph_states = [], # This setting is for emphasizing states. If left empty all will have alpha = 1, otherwise, only the states is this list will have alpha = 1
+    non_emph_alpha = 0.1) # the rest will have this alpha
 
-function PlotSingleModeEvolution(model, tlist, state_hist; markers = markers, plot_every = 1, figure_kwargs = Dict{Any, Any}(), Axis_kwargs = Dict{Any, Any}(), cmap_name = :jet1, scatterlines_kwargs = Dict{Any, Any}(), show_thresh = 1e-3)
 
     if !("size" in keys(figure_kwargs))
         figure_kwargs["size"] = (1000, 500)
@@ -67,6 +78,9 @@ function PlotSingleModeEvolution(model, tlist, state_hist; markers = markers, pl
         EVs = Get_EVs(state_hist, proj_dict)
     end
     
+    if length(emph_states) == 0
+        emph_states = keys(model.dressed_states)
+    end
 
     @info "Making Plot"
     f = cm.Figure(size = figure_kwargs["size"], figure_padding = figure_kwargs["figure_padding"], px_per_unit = figure_kwargs["px_per_unit"])
@@ -82,18 +96,30 @@ function PlotSingleModeEvolution(model, tlist, state_hist; markers = markers, pl
     for t in 0:(tlevels-1)
         for c in 0:(clevels-1)
             state = (t, c)
-            x = tlist[1:plot_every:end]
-            y = EVs[state][1:plot_every:end]
             label = nothing
-            if c == 1
-                label = string(t)
+                if c == 1
+                    label = string(t)
+                end
+            if state in keys(EVs)
+                x = tlist[1:plot_every:end]
+                y = EVs[state][1:plot_every:end]
+
+                if !(tlist[end] in x)
+                    push!(x, tlist[end])
+                    push!(y, EVs[state][end])
+                end
+
+                alpha = non_emph_alpha
+                if maximum(abs.(y)) < show_thresh
+                    alpha = 0.0
+                end
+                if state in emph_states
+                    alpha = 1
+                end
+
+                cm.scatterlines!(ax, x, real.(y), marker = markers[t+1], color = (cmap[c+1], alpha), markersize = scatterlines_kwargs["markersize"], linewidth = scatterlines_kwargs["linewidth"])
             end
-            alpha = 1
-            if maximum(abs.(y)) < show_thresh
-                alpha = 0.0
-            end
-            cm.scatterlines!(ax, x, real.(y), marker = markers[t+1], color = (cmap[c+1], alpha), markersize = scatterlines_kwargs["markersize"], linewidth = scatterlines_kwargs["linewidth"])
-            cm.scatterlines!(ax, x[1], real.(y)[1], marker = markers[t+1], color = (cmap[c+1]), label = label, markersize = scatterlines_kwargs["markersize"], linewidth = scatterlines_kwargs["linewidth"], visible = false)
+            cm.scatterlines!(ax, [0], [0], marker = markers[t+1], color = (cmap[c+1]), label = label, markersize = scatterlines_kwargs["markersize"], linewidth = scatterlines_kwargs["linewidth"], visible = false)
         end
     end
 

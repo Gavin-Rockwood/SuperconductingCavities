@@ -9,7 +9,7 @@ using OrdinaryDiffEqVerner: Vern9
 function RunSingleOperator(model::Transmon_Resonators, 
     ψ::qt.QuantumObject{<:AbstractVector{T1},qt.KetQuantumObject}, 
     op_params; 
-    spps = 5, 
+    spns = 5, 
     solver_kwargs = Dict{Any, Any}(), 
     save_step = false, 
     step_name = "DEFAULT", 
@@ -39,6 +39,12 @@ function RunSingleOperator(model::Transmon_Resonators,
     if !("alg" in keys(solver_kwargs))
         solver_kwargs["alg"] = Vern9()
     end
+    if !("abstol" in keys(solver_kwargs))
+        solver_kwargs["abstol"] = 1e-8
+    end 
+    if !("reltol" in keys(solver_kwargs))
+        solver_kwargs["reltol"] = 1e-8
+    end 
 
     ν  = op_params["freq_d"]+op_params["shift"]
     ε = op_params["epsilon"]
@@ -49,7 +55,7 @@ function RunSingleOperator(model::Transmon_Resonators,
 
 
     if length(tspan) == 0
-        tspan = collect(LinRange(0, op_params["pulse_time"], Int(ceil(op_params["pulse_time"]*spps))+1))
+        tspan = collect(LinRange(0, op_params["pulse_time"], Int(ceil(op_params["pulse_time"]*spns))+1))
     end
 
     solver_kwargs_sym = Dict{Symbol, Any}()
@@ -68,13 +74,11 @@ function RunSingleOperator(model::Transmon_Resonators,
         @info "Saving Steps"
         sleep(0.01)
         
-        properties = Dict{Any, Any}("Data"=>"Wave Functions", "Time"=>string(now()), "Times" => res.times, "Operator" => op_name)
+        properties = Dict{Any, Any}("Data"=>"Wave Functions", "Time"=>string(now()), "Times" => res.times, "Operator" => op_name, "Operator_Parameters" => string(op_params))
         
         ds_properties = Dict{Any, Any}("dims" => collect(model.hilbertspace.Ĥ.dims), "Data"=>"Wave Functions", "Solver_Args" => string(solver_kwargs))
-        for key in keys(other_ds_properties)
-            ds_properties[key] = other_ds_properties[key]
-        end
-        
+        ds_properties = merge(ds_properties, other_ds_properties)
+
         ds = Qobj_List_To_DS(res.states; cube_name = Symbol(step_name), cube_properties = properties, ds_properties = ds_properties, step_name = Symbol(step_name*"_steps"))
         
         if save_step
@@ -104,7 +108,7 @@ function RunSingleOperator(model::Transmon_Resonators,
     ρ::qt.QuantumObject{<:AbstractArray{T1},qt.OperatorQuantumObject}, 
     op_params; 
     c_ops = nothing,  
-    spps = 5, 
+    spns = 5, 
     solver_kwargs = Dict{Any, Any}(), 
     save_step = false, 
     step_name = "DEFAULT", 
@@ -133,6 +137,12 @@ function RunSingleOperator(model::Transmon_Resonators,
     if !("alg" in keys(solver_kwargs))
         solver_kwargs["alg"] = Vern9()
     end
+    if !("abstol" in keys(solver_kwargs))
+        solver_kwargs["abstol"] = 1e-9
+    end 
+    if !("reltol" in keys(solver_kwargs))
+        solver_kwargs["reltol"] = 1e-9
+    end 
 
     ν  = op_params["freq_d"]+op_params["shift"]
     ε = op_params["epsilon"]
@@ -141,7 +151,7 @@ function RunSingleOperator(model::Transmon_Resonators,
     Lₜ = Get_Lₜ(model.n̂ₜ, drive_coef)
 
     if length(tspan) == 0
-        tspan = collect(LinRange(0, op_params["pulse_time"], Int(ceil(op_params["pulse_time"]*spps))+1))
+        tspan = collect(LinRange(0, op_params["pulse_time"], Int(ceil(op_params["pulse_time"]*spns))+1))
     end
     
     solver_kwargs_sym = Dict{Symbol, Any}()
@@ -158,15 +168,12 @@ function RunSingleOperator(model::Transmon_Resonators,
         @info "Saving Steps"
         sleep(0.01)
         
-        properties = Dict{Any, Any}("Data"=>"Density Matrices", "Time"=>string(now()), "Times" => res.times, "Operator" => op_name)
+        properties = Dict{Any, Any}("Data"=>"Density Matrices", "Time"=>string(now()), "Times" => res.times, "Operator" => op_name, "Operator_Parameters" => string(op_params))
         
         ds_properties = Dict{Any, Any}("dims" => collect(model.hilbertspace.Ĥ.dims), "Data"=>"Density Matrices", "Solver_Args" => string(solver_kwargs))
+        ds_properties = merge(ds_properties, other_ds_properties)
         
         ds = Qobj_List_To_DS(res.states; cube_name = Symbol(step_name), cube_properties = properties, ds_properties = ds_properties, step_name = Symbol(step_name*"_steps"))
-        
-        for key in keys(other_ds_properties)
-            ds_properties[key] = other_ds_properties[key]
-        end
 
         if save_step
             file_name = save_path*run_name
@@ -193,7 +200,7 @@ end
 function RunPulseSequence(model::Transmon_Resonators, 
     ψ::qt.QuantumObject{<:AbstractVector{T1}, qt.KetQuantumObject, 2}, 
     op_sequence; 
-    spps = 5, 
+    spns = 5, 
     solver_kwargs = Dict{Any, Any}(), 
     run_name = "", 
     save_path = "Data/",
@@ -216,10 +223,11 @@ function RunPulseSequence(model::Transmon_Resonators,
         op = op_sequence[i]
         @info "Running operator $op"
         step_name = "Step_"*string(i)
-        ψ = RunSingleOperator(model, ψ, model.Stuff["op_drive_params"][op]; spps = spps, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = step_name, to_return = "Last", save_step = true, op_name = op, other_ds_properties = other_ds_properties)
+        ψ = RunSingleOperator(model, ψ, model.Stuff["op_drive_params"][op]; spns = spns, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = step_name, to_return = "Last", save_step = true, op_name = op, other_ds_properties = other_ds_properties)
     end
-
+    @info "Done With Running Sequence"
     if Return
+        @info "Loading Data"
         dat = LoadRunResults(save_path*run_name*".nc")
         if clean_up
             rm(save_path*run_name*".nc")
@@ -232,11 +240,12 @@ end
 function RunPulseSequence(model::Transmon_Resonators, 
     ρ::qt.QuantumObject{<:AbstractArray{T1},qt.OperatorQuantumObject}, 
     op_sequence; 
-    spps = 5, 
+    spns = 5, 
     solver_kwargs = Dict{Any, Any}(), 
     run_name = "", 
     save_path = "Data/", 
-    c_ops = []
+    c_ops = [],
+    other_ds_properties = Dict{Any, Any}()
     ) where T1<:Number
     #-------------------------------------------------------------
     if run_name == ""
@@ -249,14 +258,17 @@ function RunPulseSequence(model::Transmon_Resonators,
         step_name = "Step_"*string(i)
         cube_order = cube_order*" "*step_name
     end
-    other_ds_properties = Dict{Any, Any}("Order" => cube_order)
+    
+    other_ds_properties["Order"] = cube_order
 
+    num_steps = length(op_sequence)
     for i in 1:length(op_sequence)
         op = op_sequence[i]
-        @info "Running operator $op"
+        @info "Step $i/$num_steps: Running operator $op"
         step_name = "Step_"*string(i)
-        ρ = RunSingleOperator(model, ρ, model.Stuff["op_drive_params"][op]; spps = spps, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = step_name, to_return = "Last", c_ops = c_ops, save_step = true, op_name = op, other_ds_properties = other_ds_properties)
+        ρ = RunSingleOperator(model, ρ, model.Stuff["op_drive_params"][op]; spns = spns, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = step_name, to_return = "Last", c_ops = c_ops, save_step = true, op_name = op, other_ds_properties = other_ds_properties)
     end
+    @info "Done With Running Sequence"
 end
 
 
