@@ -1,17 +1,15 @@
-import QuantumToolbox as qt
-using LinearAlgebra
-#using ProtoStructs
+@kwdef struct Hilbertspace
+    Components :: Dict
+    Interactions :: Vector
+    𝕀̂_Dict :: Dict
+    𝕀̂ :: qt.QuantumObject
+    Ĥ :: qt.QuantumObject
 
-#path_to_utils = join(split(@__DIR__, "/")[1:end-1], "/")*"/Utils"
-#include(path_to_utils*"/HilbertSpaceUtils.jl")
-include("Elements/Transmon.jl")
-include("Elements/Resonator.jl")
-include("Hilbertspace_Struct.jl")
+    dressed_states :: Dict
+    dressed_energies :: Dict
+end
 
-export Hilbertspace_Constructor
-
-
-function Hilbertspace_Constructor(Components, Interactions; order = [])
+function init(Components, Interactions; order = [])
     if length(order) == length(Components)
         key_list = order
     else
@@ -30,13 +28,13 @@ function Hilbertspace_Constructor(Components, Interactions; order = [])
     Ĥ_non_int_list = []
     for key in key_list
         op_dict = Dict(Components[key].name => Components[key].Ĥ)
-        push!(Ĥ_non_int_list, IdentityWrapper(𝕀̂_Dict, op_dict, order = order))
+        push!(Ĥ_non_int_list, Utils.IdentityWrapper(𝕀̂_Dict, op_dict, order = order))
     end
     
     Ĥ_non_int = sum(Ĥ_non_int_list)
     Ĥ_int = 0*Ĥ_non_int
     for key in keys(Interactions)
-        term = IdentityWrapper(𝕀̂_Dict, Interactions[key]["ops"], order = order)*Interactions[key]["g"]
+        term = Utils.IdentityWrapper(𝕀̂_Dict, Interactions[key]["ops"], order = order)*Interactions[key]["g"]
         Ĥ_int += term
     end
 
@@ -84,6 +82,6 @@ function Hilbertspace_Constructor(Components, Interactions; order = [])
     else
         𝕀̂ = qt.tensor(𝕀̂_vec...)
     end
-    return HilbertSpace(Components=Components, Interactions = Interactions, 𝕀̂_Dict =𝕀̂_Dict, Ĥ = Ĥ, dressed_states = dressed_states, dressed_energies = dressed_energies, 𝕀̂ = 𝕀̂)
+    return Hilbertspace(Components=Components, Interactions = Interactions, 𝕀̂_Dict =𝕀̂_Dict, Ĥ = Ĥ, dressed_states = dressed_states, dressed_energies = dressed_energies, 𝕀̂ = 𝕀̂)
 
 end

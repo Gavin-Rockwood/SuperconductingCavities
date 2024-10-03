@@ -4,9 +4,17 @@ using DimensionalData
 import LsqFit as LF
 import CairoMakie as cm
 
-function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; make_plot = true)
-    ν = model.dressed_energies[state2]- model.dressed_energies[state1]
-
+function FindStarkShift(hilbertspace::Hilbertspaces.Hilbertspace,
+    drive_op,
+    ψ1,
+    ψ2,
+    ν,
+    ε, 
+    starkshift_list; 
+    make_plot = true, 
+    state_names = ["ψ1", "ψ2"]
+    )
+    
     νs = ν .+ starkshift_list
 
     arg_list = []
@@ -18,15 +26,15 @@ function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; ma
         push!(arg_list, arg_dict)
     end
 
-    floq_sweep_res = Floquet_0_Sweep(model, drive_op, arg_list)
+    floq_sweep_res = Floquet_0_Sweep(hilbertspace, drive_op, arg_list)
 
     states_to_track = Dict{Any, Any}()
 
-    states_to_track[tostr(state1)] = model.dressed_states[state1];
-    states_to_track[tostr(state2)] = model.dressed_states[state2];
+    states_to_track[tostr(state_name[1])] = ψ1;
+    states_to_track[tostr(state_name[2])] = ψ2;
 
     other_sorts = Dict("F_Energies" => floq_sweep_res["F_Energies"])
-    tracking_res = State_Tracker(floq_sweep_res["F_Modes"], states_to_track, other_sorts = other_sorts);
+    tracking_res = Utils.State_Tracker(floq_sweep_res["F_Modes"], states_to_track, other_sorts = other_sorts);
 
     ys = []
     for state in dims(tracking_res, :State)
@@ -95,7 +103,7 @@ function FindStarkShift(model, drive_op, state1, state2, ε, starkshift_list; ma
 
 end
 
-function OptimizePulse(model, 
+function OptimizePulse(Ĥ,Ô_D, 
     ψ1,
     ψ2,
     ε,
@@ -129,20 +137,10 @@ function OptimizePulse(model,
             t = tspan[i]
             @info "On Step $i: t = $t"
             drive_args["pulse_time"] = t
-            # if "pulse_time" in keys(drive_args["Envelope Args"])
-            #     drive_args["Envelope Args"]["pulse_time"] = t
-            # end
-            # if "sigma" in keys(drive_args["Envelope Args"])
-            #     drive_args["Envelope Args"]["sigma"] = t/sigma_factor
-            # end
-            # if "mu" in keys(drive_args["Envelope Args"])
-            #     drive_args["Envelope Args"]["mu"] = t/2
-            # end
 
-            drive_args["Envelope Args"] = Envelope_Dict_Cal[drive_args["Envelope"]](t, drive_args["Envelope Args"], envelope_params)
+            drive_args["Envelope Args"] = Envelopes.Envelope_Dict_Cal[drive_args["Envelope"]](t, drive_args["Envelope Args"], envelope_params)
 
-            
-            run_res = RunSingleOperator(model, ψ1, drive_args, to_return = "Last", save_step = false, solver_kwargs = solver_kwargs, spns = spns, step_name = "Level_"*string(level)*"_step_"*string(i))
+            run_res = RunSingleOperator(Ĥ, Ô_D, ψ1, drive_args, to_return = "Last", save_step = false, solver_kwargs = solver_kwargs, spns = spns, step_name = "Level_"*string(level)*"_step_"*string(i))
             
             goodness = abs(run_res'*ψ2)^2
 
@@ -174,13 +172,6 @@ function OptimizePulse(model,
         @info "New ti: $ti, new tf: $tf"
         @info "===================================================================================================\n"
     end
-
-    #opt_drive_time = tspan[argmax(level_res)]
-
-    #drive_args["pulse_time"] = opt_drive_time
-    #if "pulse_time" in keys(drive_args["Envelope Args"])
-    #    drive_args["Envelope Args"]["pulse_time"] = opt_drive_time
-    #end
 
     return list_of_drive_args[argmax(level_res)]
 

@@ -1,15 +1,24 @@
 module SuperconductingCavities
 
-import QuantumToolbox as qt
-using Revise
-using LinearAlgebra
+    import QuantumToolbox as qt
+    using Revise
+    using LinearAlgebra
 
-abstract type Model end
+    abstract type Model end
 
-include("Hilbertspace_Constructor/Hilbertspace_Constructor.jl")
-include("Circuits/Circuits.jl")
-include("Utils/Utils.jl")
+    include("Utils/Utils.jl")
+    import .Utils
 
+    include("Hilbertspace/Hilbertspace.jl")
+    import .Hilbertspaces
 
+    include("Dynamics/Dynamics.jl")
+    import .Dynamics
 
+    include("Circuits/Circuits.jl")
+    import .Circuits
+
+    
+
+    
 end
