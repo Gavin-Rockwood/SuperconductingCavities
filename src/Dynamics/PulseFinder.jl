@@ -30,8 +30,8 @@ function FindStarkShift(hilbertspace::Hilbertspaces.Hilbertspace,
 
     states_to_track = Dict{Any, Any}()
 
-    states_to_track[tostr(state_name[1])] = ψ1;
-    states_to_track[tostr(state_name[2])] = ψ2;
+    states_to_track[Utils.tostr(state_names[1])] = ψ1;
+    states_to_track[Utils.tostr(state_names[2])] = ψ2;
 
     other_sorts = Dict("F_Energies" => floq_sweep_res["F_Energies"])
     tracking_res = Utils.State_Tracker(floq_sweep_res["F_Modes"], states_to_track, other_sorts = other_sorts);
@@ -65,7 +65,7 @@ function FindStarkShift(hilbertspace::Hilbertspaces.Hilbertspace,
     p0[3] = abs((maximum(difs)-minimum(difs))/(x[argmax(difs)]-x[argmin(difs)]))
     fit = LF.curve_fit(to_fit, x, difs, p0)
 
-    @info "Fit Stuff: "*tostr(fit.param)
+    @info "Fit Stuff: "*Utils.tostr(fit.param)
     
     if make_plot 
         f = cm.Figure(size = (800, 500), px_per_unit = 3)

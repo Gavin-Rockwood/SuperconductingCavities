@@ -4,9 +4,9 @@ function Dynamics.FindStarkShift(model::TransmonResonators,
     args...; kwargs...
     )
 
-    ν = model.dressed_energies[(state2)]-model.dressed_energies[(state1)]
-    ψ1 = model.dressed_states[(state1)]
-    ψ2 = model.dressed_states[(state2)]
+    ν = model.dressed_energies[state2]-model.dressed_energies[state1]
+    ψ1 = model.dressed_states[state1]
+    ψ2 = model.dressed_states[state2]
 
     state_names = [string(state1), string(state2)]
     
@@ -23,7 +23,7 @@ function Dynamics.RunSingleOperator(model::TransmonResonators, args...; kwargs..
 end
 
 function Dynamics.RunPulseSequence(model::TransmonResonators,
-    state::Union{qt.QuantumObject{<:AbstractVector{T1}, qt.KetQuantumObject, 2}, qt.QuantumObject{<:AbstractArray{T1},qt.OperatorQuantumObject}}
+    state::Union{qt.QuantumObject{<:AbstractVector{T1}, qt.KetQuantumObject, 2}, qt.QuantumObject{<:AbstractArray{T1},qt.OperatorQuantumObject}},
     op_sequence,
     args...;
     kwargs...

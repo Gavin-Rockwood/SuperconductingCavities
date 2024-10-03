@@ -1,5 +1,6 @@
 import QuantumToolbox as qt
 using YAXArrays
+using DimensionalData
 import ProgressMeter as PM
 using Dates
 
@@ -23,7 +24,7 @@ function LoadRunResults(file; cube_order = "Default", h_dims = "Default")
         end
     end
     if "dims" in keys(ds.properties)
-        h_dims = ds.properties["dims"]
+        h_dims = tuple(ds.properties["dims"]...)
     elseif h_dims == "Default"
         h_dims = nothing
     end

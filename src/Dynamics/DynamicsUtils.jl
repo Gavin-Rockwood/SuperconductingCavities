@@ -11,17 +11,6 @@ function Get_Drive_Coef(ν, ε; envelope = Envelopes.Square_Envelope)
     return drive_coef
 end
 
-function Get_Envelope(envelope_name, envelope_kwargs)
-    envelope_kwargs_sym = Dict{Symbol, Any}()
-    for key in keys(envelope_kwargs)
-        envelope_kwargs_sym[Symbol(key)] = envelope_kwargs[key]
-    end
-    function envelope(t)
-        return Envelopes.Envelope_Dict[envelope_name](t; envelope_kwargs_sym...)
-    end
-    return envelope
-end
-
 function Get_Ĥ_D(op::qt.QuantumObject, drive_coef::Union{Nothing, Function}; TDOS = true, params = nothing, init_time = 0.0)
     drive_coef = (drive_coef isa Nothing) ? (t)->1 : drive_coef
 
@@ -38,7 +27,7 @@ end
 
 
 function Propagator(hilbertspace, Ĥₜ, tf; progress_meter = false, ti = 0)
-    U = 0*eye_like(hilbertspace.Ĥ)
+    U = 0*Utils.eye_like(hilbertspace.Ĥ)
 
     p = PM.Progress(length(hilbertspace.dressed_states), enabled = progress_meter)
     for state in keys(hilbertspace.dressed_states)

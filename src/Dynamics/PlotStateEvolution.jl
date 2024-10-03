@@ -4,23 +4,7 @@ using YAXArrays
 
 markers = ['+', '×', '∘', '⋆', '▿', '▵', '⊲', '⊳', '⏣', '⭔']
 
-function Get_Projection_Ops(dict_of_wavefunctions)
-    res = deepcopy(dict_of_wavefunctions)
-    map!(x -> x*x', values(res))
-    return res
-end
 
-
-function Get_EVs(list_of_states, dict_of_operators)
-    res = Dict{Any, Any}()
-
-    for key in keys(dict_of_operators)
-        op = dict_of_operators[key]
-
-        res[key] = [qt.expect(op, ψ) for ψ in list_of_states]
-    end
-    return res
-end
 function PlotSingleModeEvolution(model, 
     tlist, 
     state_hist; 
@@ -74,8 +58,8 @@ function PlotSingleModeEvolution(model,
     if typeof(state_hist) <: Dict
         EVs = state_hist
     else
-        proj_dict = Get_Projection_Ops(model.dressed_states)
-        EVs = Get_EVs(state_hist, proj_dict)
+        proj_dict = Utils.Get_Projection_Ops(model.dressed_states)
+        EVs = Utils.Get_EVs(state_hist, proj_dict)
     end
     
     if length(emph_states) == 0
