@@ -40,10 +40,10 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
         solver_kwargs["alg"] = Vern9()
     end
     if !("abstol" in keys(solver_kwargs))
-        solver_kwargs["abstol"] = 1e-8
+        solver_kwargs["abstol"] = 1e-6
     end 
     if !("reltol" in keys(solver_kwargs))
-        solver_kwargs["reltol"] = 1e-8
+        solver_kwargs["reltol"] = 1e-6
     end 
 
     ν  = op_params["freq_d"]+op_params["shift"]
@@ -138,10 +138,10 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
         solver_kwargs["alg"] = Vern9()
     end
     if !("abstol" in keys(solver_kwargs))
-        solver_kwargs["abstol"] = 1e-9
+        solver_kwargs["abstol"] = 1e-6
     end 
     if !("reltol" in keys(solver_kwargs))
-        solver_kwargs["reltol"] = 1e-9
+        solver_kwargs["reltol"] = 1e-6
     end 
 
     ν  = op_params["freq_d"]+op_params["shift"]

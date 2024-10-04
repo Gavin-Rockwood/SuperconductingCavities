@@ -124,5 +124,5 @@ function PlotSingleModeEvolution(model,
     f[1,3] = cm.Legend(f, ax, label, framevisible = false)#; legend_kwargs...)#orientation = :horizontal, position = :ct)
     cm.ylims!(ax, -0.1, 1.1)
 
-    f
+    cm.display(f)
 end

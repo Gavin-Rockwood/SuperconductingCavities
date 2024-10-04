@@ -12,17 +12,17 @@ module Transmons
         Eʲ :: Float64
         ng :: Real
 
-        full_N :: Int # U(1) Charge Number cutoff
+        N_full :: Int # U(1) Charge Number cutoff
         N :: Int # Number of Truncated Levels
         dim :: Int
         
-        full_Ĥ :: qt.QuantumObject
+        Ĥ_full :: qt.QuantumObject
         Ĥ :: qt.QuantumObject
 
-        full_n̂ :: qt.QuantumObject # Cut U(1) charge operator
+        n̂_full :: qt.QuantumObject # Cut U(1) charge operator
         n̂ :: qt.QuantumObject # Truncated n operator
 
-        full_eigsys ::  qt.EigsolveResult
+        eigsys_full ::  qt.EigsolveResult
         eigsys :: qt.EigsolveResult
     end
 
