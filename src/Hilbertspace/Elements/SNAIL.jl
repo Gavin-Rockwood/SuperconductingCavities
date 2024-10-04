@@ -13,24 +13,24 @@ export Transmon, Init_Transmon
     Eʲ :: Float64
     Eˡ :: Float64
     α :: Float64 #
-    Φ :: Float64 # Flux
+    Φₑ :: Float64 # Flux
 
-    N_cut :: Int # U(1) Charge Number cutoff
+    N_full :: Int # U(1) Charge Number cutoff
     N :: Int # Number of Truncated Levels
     dim :: Int
     
-    Ĥ_cut :: qt.QuantumObject
+    Ĥ_full :: qt.QuantumObject
     Ĥ :: qt.QuantumObject
 
-    n̂_cut :: qt.QuantumObject # Cut U(1) charge operator
+    n̂_full :: qt.QuantumObject # dim for truncated U(1) charge operator
     n̂ :: qt.QuantumObject # Truncated n operator
 
-    eigsys_cut ::  qt.EigsolveResult
+    eigsys_full ::  qt.EigsolveResult
     eigsys :: qt.EigsolveResult
 end
 
 
-function SNAIL_c(n)
+function c(n)
     @variables φ α N Φₑ
 
     U = -α*cos(φ) - N * cos((φ - Φₑ)/N)
@@ -40,7 +40,7 @@ function SNAIL_c(n)
     return expand_derivatives(D(U))
 end
 
-function SNAIL_get_c_coeffs_bare(N_val, α_val, Φₑ_val)
+function get_c_coeffs_bare(N_val, α_val, Φₑ_val)
     @variables φ N α Φₑ
 
     c_syms = []
@@ -65,8 +65,8 @@ function SNAIL_get_c_coeffs_bare(N_val, α_val, Φₑ_val)
     return cs
 end
 
-function SNAIL_get_c_coeffs_dressed(N, α, Φₑ, Eʲ, Eˡ)
-    cs = SNAIL_get_c_coeffs_bare(N, α, Φₑ)
+function get_c_coeffs_dressed(N, α, Φₑ, Eʲ, Eˡ)
+    cs = get_c_coeffs_bare(N, α, Φₑ)
     φ = Eˡ/(Eˡ+cs[2]*Eʲ)
 
     c2_dr = φ*cs[2]
@@ -78,8 +78,8 @@ function SNAIL_get_c_coeffs_dressed(N, α, Φₑ, Eʲ, Eˡ)
     return [0, c2_dr, c3_dr, c4_dr, c5_dr, c6_dr]
 end
 
-function Init_SNAIL(Eᶜ, Eʲ, Eˡ, α, Φₑ,  full_dim, N, name;  ng = 0)
-    cs = SNAIL_get_c_coeffs_dressed(N, α, Φₑ, Eʲ, Eˡ)
+function init(Eᶜ, Eʲ, Eˡ, α, Φₑ,  full_dim, N, name;  ng = 0)
+    cs = get_c_coeffs_dressed(N, α, Φₑ, Eʲ, Eˡ)
     
     ν = sqrt(8*cs[2]*Eᶜ*Eʲ)
     φ_zpf = (2*Eᶜ/Eʲ/cs[2])
@@ -103,5 +103,29 @@ function Init_SNAIL(Eᶜ, Eʲ, Eˡ, α, Φₑ,  full_dim, N, name;  ng = 0)
     for i in 1:N
         Π[:, i] = eigsys_full.vectors[:,i]
     end
+
+    H⃗_full = Ĥ_full
+    H⃗ = Π'*H⃗_full*Π
+    n⃗_full = n̂_full.data
+    n⃗ = Π'*n⃗_full*Π
+
+    Ĥ = qt.Qobj(H⃗)
+    herm_check = norm(Ĥ - Ĥ')
+    if herm_check > 1e-9
+        println("Herm_check for Ĥ Failed with value $herm_check")
+    end
+    Ĥ =  0.5*(Ĥ+Ĥ')
+
+    n̂ =  qt.Qobj(n⃗)
+    herm_check = norm(n̂-n̂')
+    if herm_check > 1e-9
+        println("Herm_check for n̂ Failed with value $herm_check")
+    end
+    n̂ = 0.5*(n̂+n̂')
+
+    eigsys = qt.eigenstates(Ĥ)
+
+    return SNAIL(name = name,  Eᶜ = Eᶜ, Eʲ = Eʲ, Eˡ = Eˡ, α = α, Φₑ = Φₑ, N_full = N_full, N = N, dim = N,  Ĥ_full = Ĥ_full, Ĥ = Ĥ, n̂_full = n̂_full, eigsys_full = eigsys_full, eigsys = eigsys)
+    
 
 end
