@@ -12,7 +12,8 @@ function FindStarkShift(hilbertspace::Hilbertspaces.Hilbertspace,
     ε, 
     starkshift_list; 
     make_plot = true, 
-    state_names = ["ψ1", "ψ2"]
+    state_names = ["ψ1", "ψ2"],
+    sub_logging = true
     )
     
     νs = ν .+ starkshift_list
@@ -26,7 +27,7 @@ function FindStarkShift(hilbertspace::Hilbertspaces.Hilbertspace,
         push!(arg_list, arg_dict)
     end
 
-    floq_sweep_res = Floquet_0_Sweep(hilbertspace, drive_op, arg_list)
+    floq_sweep_res = Floquet_0_Sweep(hilbertspace, drive_op, arg_list, use_logging = sub_logging)
 
     states_to_track = Dict{Any, Any}()
 
@@ -34,7 +35,7 @@ function FindStarkShift(hilbertspace::Hilbertspaces.Hilbertspace,
     states_to_track[Utils.tostr(state_names[2])] = ψ2;
 
     other_sorts = Dict("F_Energies" => floq_sweep_res["F_Energies"])
-    tracking_res = Utils.State_Tracker(floq_sweep_res["F_Modes"], states_to_track, other_sorts = other_sorts);
+    tracking_res = Utils.State_Tracker(floq_sweep_res["F_Modes"], states_to_track, other_sorts = other_sorts, use_logging = sub_logging);
 
     ys = []
     for state in dims(tracking_res, :State)
@@ -175,4 +176,26 @@ function OptimizePulse(Ĥ,Ô_D,
 
     return list_of_drive_args[argmax(level_res)]
 
+end
+
+
+function FitStarkShifts(hilbertspace::Hilbertspaces.Hilbertspace, Ô_D, ψ1, ψ2, ν, εs, starkshift_list; fit_order = 8, make_plot = true, p0 = [], sub_logging = false)
+    stark_shifts = []
+    drive_times = []
+    for i in 1:length(εs)
+        ε = εs[i]
+        @info "Doing Step $i/$(length(εs))"
+        res = FindStarkShift(hilbertspace, Ô_D, ψ1, ψ2, ν, ε, starkshift_list, make_plot = make_plot, sub_logging = sub_logging)
+        push!(stark_shifts, res[1])
+        push!(drive_times, res[2])
+    end
+
+    to_fit(ε, p) = sum(p[n]*ε.^(n) for n in 1:length(p))
+
+    if length(p0) == 0
+        p0 = ones(fit_order)
+    end
+    fit_res = LF.curve_fit(to_fit, εs, stark_shifts, p0)
+
+    return fit_res
 end

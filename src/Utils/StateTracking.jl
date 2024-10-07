@@ -1,7 +1,7 @@
 import QuantumToolbox as qt
 using YAXArrays
 
-function State_Tracker(state_history::Vector, states_to_track::Dict; other_sorts = Dict{Any, Any}())
+function State_Tracker(state_history::Vector, states_to_track::Dict; other_sorts = Dict{Any, Any}(), use_logging = true)
     STEPS = length(state_history)
     NUM_IN_STEP = length(state_history[1])
     NUM_TO_TRACK = length(states_to_track)
@@ -13,7 +13,7 @@ function State_Tracker(state_history::Vector, states_to_track::Dict; other_sorts
     history = map(deepcopy, history)
     #return history
     for state in state_keys
-        @info "Tracking State $state"
+        if use_logging @info "Tracking State $state" end
         ψᵢ = 0
         for step in 1:STEPS
             @debug "    On Step $step / $STEPS"
@@ -27,9 +27,9 @@ function State_Tracker(state_history::Vector, states_to_track::Dict; other_sorts
             overlaps = zeros(NUM_IN_STEP)
             for j in 1:NUM_IN_STEP
                 overlaps[j] = (abs(ψᵢ₋₁'*state_history[step][j]))^2
-                @debug "Overlap for state $j : "*string(overlaps[j])
+                if use_logging @debug "Overlap for state $j : "*string(overlaps[j]) end
             end 
-            @debug "Max oversap: "*string(maximum(overlaps))
+            if use_logging @debug "Max oversap: "*string(maximum(overlaps)) end
             
             max_loc = argmax(overlaps)
             ψᵢ = state_history[step][max_loc]

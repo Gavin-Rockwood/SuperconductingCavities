@@ -45,9 +45,22 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     if !("reltol" in keys(solver_kwargs))
         solver_kwargs["reltol"] = 1e-6
     end 
+    
+    chirp = false
+    if "chirp_params" in keys(op_params)
+        chirp = true
+    end
 
+    
     ν  = op_params["freq_d"]+op_params["shift"]
+
+    if chirp
+        ν(ε) = op_params["freq_d"] + sum(op_params["chirp_params"][n]*ε^n for n in 1:length(op_params["chirp_params"]))
+    end
+
     ε = op_params["epsilon"]
+
+
 
     drive_coef = Get_Drive_Coef(ν, ε, envelope = Envelopes.Get_Envelope(op_params["Envelope"], op_params["Envelope Args"]))
 
