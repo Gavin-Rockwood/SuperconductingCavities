@@ -32,3 +32,7 @@ function Dynamics.RunPulseSequence(model::TransmonResonators,
     Dynamics.RunPulseSequence(model.Ĥ, model.n̂ₜ, state, op_sequence, model.Stuff["op_drive_params"], args...; kwargs...)
 end
 
+
+function Utils.save_model(model::TransmonResonators; kwargs...)
+    save_model(model; kwargs...)
+end

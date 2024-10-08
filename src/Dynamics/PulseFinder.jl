@@ -118,11 +118,15 @@ function OptimizePulse(Ĥ,Ô_D,
     solver_kwargs = Dict{Any, Any}(),
     spns = 5,
     envelope_params = Dict{Any, Any}(),
-    check_op = nothing)
+    check_op = nothing,
+    chirp_params = nothing)
     
     drive_args = Dict{Any, Any}("pulse_time" => 0.0, "epsilon" => ε, "Envelope" => envelope, "shift"=>stark_shift, "freq_d"=>freq_d)
     drive_args["Envelope Args"] = envelope_args
-    
+    if chirp_params != nothing
+        drive_args["chirp_params"] = chirp_params
+    end
+
     ti = t_range[1]
     tf = t_range[2]
     tspan = LinRange(ti, tf, samples_per_level)
@@ -197,5 +201,5 @@ function FitStarkShifts(hilbertspace::Hilbertspaces.Hilbertspace, Ô_D, ψ1, ψ
     end
     fit_res = LF.curve_fit(to_fit, εs, stark_shifts, p0)
 
-    return fit_res
+    return [fit_res, εs, stark_shifts]
 end

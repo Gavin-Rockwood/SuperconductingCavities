@@ -43,6 +43,10 @@ function save_model(model::TransmonResonators; model_name = nothing, save_path =
     save_dict["Main_Config"] = model.params
     save_dict["Stuff"] = Dict{Any, Any}()
     
+    for key in keys(model.Stuff)
+        save_dict["Stuff"][key] = model.Stuff[key]
+    end
+
     if "op_drive_params" in keys(model.Stuff)
         save_dict["Stuff"]["op_drive_params"] = model.Stuff["op_drive_params"]
     end
@@ -77,8 +81,6 @@ function save_model(model::TransmonResonators; model_name = nothing, save_path =
         rm(filename*"_BACKUP"*".json")
     catch
     end
-
-
 end
 
 function load(file)
@@ -113,17 +115,11 @@ function load(file)
 
     model = init(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs, Nₜ_cut=Nₜ_cut, ng=ng, Cavity_Names=Cavity_Names, κᵗᶜ=κᵗᶜ, κᵗᵈ=κᵗᵈ, κᶜᶜ = κᶜᶜ, Model_Name = Model_Name, Save_Path = Save_Path)
     
-    if "op_drive_params" in keys(saved_dict["Stuff"])
-        model.Stuff["op_drive_params"] = saved_dict["Stuff"]["op_drive_params"]
-    else 
-        model.Stuff["op_drive_params"] = Dict{Any, Any}()
-
+    
+    for key in keys(saved_dict["Stuff"])
+        model.Stuff[key] = saved_dict["Stuff"][key]
     end
-    if "Drive_Sequences" in keys(saved_dict["Stuff"])
-        model.Stuff["Drive_Sequences"] = saved_dict["Stuff"]["Drive_Sequences"]
-    else
-        model.Stuff["Drive_Sequences"] = Dict{Any, Any}()
-    end
+    
 
     return model
 end

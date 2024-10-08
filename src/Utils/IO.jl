@@ -63,3 +63,7 @@ function LoadRunResults(file; cube_order = "Default", h_dims = "Default")
     return Dict{Any, Any}("states" => state_list, "times" => time_list)
 
 end
+
+function save_model(model; kwargs...) ### This is a placeholder function for later overloads
+
+end

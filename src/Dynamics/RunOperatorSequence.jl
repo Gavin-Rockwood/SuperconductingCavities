@@ -48,14 +48,21 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     
     chirp = false
     if "chirp_params" in keys(op_params)
-        chirp = true
+        if !(op_params["chirp_params"] == nothing)
+            chirp = true
+        end
     end
 
     
     ν  = op_params["freq_d"]+op_params["shift"]
 
     if chirp
-        ν(ε) = op_params["freq_d"] + sum(op_params["chirp_params"][n]*ε^n for n in 1:length(op_params["chirp_params"]))
+        @info "Using Chirp"
+        α = 1
+        if "chirp_factor" in keys(op_params)
+            α = op_params["chirp_factor"]
+        end
+        ν(ε) = op_params["freq_d"] + α*sum(op_params["chirp_params"][n]*ε^n for n in 1:length(op_params["chirp_params"]))+(1-α)*op_params["shift"]
     end
 
     ε = op_params["epsilon"]

@@ -70,24 +70,28 @@ module SNAILs
     end
 
     function get_c_coeffs_dressed(N, α, Φᵉ, Eʲ, Eˡ)
-        cs = get_c_coeffs_bare(N, α, Φᵉ)
-        φ = Eˡ/(Eˡ+cs[2]*Eʲ)
+        cs = get_c_coeffs_bare(N, α, 2*π*Φᵉ)
+        @debug "bare cs: $cs"
+        p = Eˡ/(Eˡ+cs[2]*Eʲ)
 
-        c2_dr = φ*cs[2]
+        c2_dr = p*cs[2]
         c3_dr = cs[3]
-        c4_dr = cs[4]-3*cs[3]^2/cs[2]*(1-φ)/φ
-        c5_dr = cs[5]-10*cs[3]*cs[4]/cs[2]*(1-φ)/φ+15*cs[3]^2/cs[2]^2*(1-φ)^2/φ^2
-        c6_dr = cs[6] - (10*cs[4]^2+15*cs[5]*cs[3])/(cs[2]*φ)*(1-φ) * (105*cs[4]*cs[3]^2)/(cs[2]*φ)^2*(1-φ)^2-(105*cs[3]^4)/(cs[2]*φ)^3*(1-φ)^3
+        c4_dr = cs[4]-3*cs[3]^2/cs[2]*(1-p)/p
+        c5_dr = cs[5]-10*cs[3]*cs[4]/cs[2]*(1-p)/p+15*cs[3]^3/cs[2]^2*(1-p)^2/p^2
+        c6_dr = cs[6] - (10*cs[4]^2+15*cs[5]*cs[3])/(cs[2]*p)*(1-p) + (105*cs[4]*cs[3]^2)/(cs[2]*p)^2*(1-p)^2-(105*cs[3]^4)/(cs[2]*p)^3*(1-p)^3
 
         return [0, c2_dr, c3_dr, c4_dr, c5_dr, c6_dr]
     end
 
-    function init(Eᶜ, Eʲ, Eˡ, α, Φᵉ,  dim_full, N; name = "SNAIL")
-        cs = get_c_coeffs_dressed(N, α, Φᵉ, Eʲ, Eˡ)
-        @debug "cs: $cs"
+    function init(Eᶜ, Eʲ, Eˡ, α, Φᵉ,  dim_full, N; name = "SNAIL", N_Junc = 3)
+        cs = get_c_coeffs_dressed(N_Junc, α, Φᵉ, Eʲ, Eˡ)
+        @debug "dressed cs: $cs"
         
         ν = sqrt(8*cs[2]*Eᶜ*Eʲ)
-        φ_zpf = (2*Eᶜ/Eʲ/cs[2])
+        φ_zpf = (2*Eᶜ/Eʲ/cs[2])^(1/4)
+        @debug "φ_zpf: $φ_zpf"
+        n_zpf = 1/2/φ_zpf
+        @debug "n_zpf: $n_zpf"
 
         â_full = qt.destroy(dim_full)
         n̂_full = 1im*(â_full'-â_full)
@@ -98,8 +102,6 @@ module SNAILs
         if herm_check > 1e-9
             println("Herm_check for φ̂_full: $herm_check")
         end
-        φ̂_full = 0.5*(φ̂_full+φ̂_full')
-
         Ĥ_full = ν*â_full'*â_full
 
         den = 2
