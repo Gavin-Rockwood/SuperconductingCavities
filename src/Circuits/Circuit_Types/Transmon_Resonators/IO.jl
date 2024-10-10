@@ -123,3 +123,24 @@ function load(file)
 
     return model
 end
+
+function Base.copy(model::TransmonResonators; name_addon = "Copy")
+    props = propertynames(model)
+    deets_dict = Dict{Any, Any}()
+    for prop in props
+        deets_dict[prop] = deepcopy(getfield(model, prop))
+    end
+
+    new_model = TransmonResonators(;deets_dict...)
+
+    old_name = new_model.params["Model_Name"]
+    new_name = replace(new_model.params["Model_Name"], old_name => old_name*"_"*name_addon)
+    new_path = replace(new_model.params["Save_Path"], old_name => old_name*"_"*name_addon)
+
+    println(new_path)
+    println(new_name)
+
+    new_model.params["Model_Name"] = new_name
+    new_model.params["Save_Path"] = new_path
+    return new_model
+end
