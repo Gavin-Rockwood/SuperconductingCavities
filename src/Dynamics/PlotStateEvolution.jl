@@ -11,7 +11,7 @@ function PlotSingleModeEvolution(model,
     markers = markers,
     plot_every = 1,
     figure_kwargs = Dict{Any, Any}(),
-    Axis_kwargs = Dict{Any, Any}(),
+    axis_kwargs = Dict{Any, Any}(),
     cmap_name = :seaborn_bright,
     scatterlines_kwargs = Dict{Any, Any}(),
     show_thresh = 1e-3, 
@@ -29,14 +29,14 @@ function PlotSingleModeEvolution(model,
         figure_kwargs["px_per_unit"] = 4
     end
 
-    if !("title" in keys(Axis_kwargs))
-        Axis_kwargs["title"] = "Pulse Sequence Results"
+    if !("title" in keys(axis_kwargs))
+        axis_kwargs["title"] = "Pulse Sequence Results"
     end
-    if !("xlabel" in keys(Axis_kwargs))
-        Axis_kwargs["xlabel"] = "Time"
+    if !("xlabel" in keys(axis_kwargs))
+        axis_kwargs["xlabel"] = "Time"
     end
-    if !("ylable" in keys(Axis_kwargs))
-        Axis_kwargs["ylabel"] = "Probability"
+    if !("ylable" in keys(axis_kwargs))
+        axis_kwargs["ylabel"] = "Probability"
     end
 
     if !("markersize" in keys(scatterlines_kwargs))
@@ -54,7 +54,6 @@ function PlotSingleModeEvolution(model,
     # end
 
 
-    
     if typeof(state_hist) <: Dict
         EVs = state_hist
     else
@@ -69,7 +68,7 @@ function PlotSingleModeEvolution(model,
     @info "Making Plot"
     f = cm.Figure(size = figure_kwargs["size"], figure_padding = figure_kwargs["figure_padding"], px_per_unit = figure_kwargs["px_per_unit"])
 
-    ax = cm.Axis(f[1,1], xlabel = Axis_kwargs["xlabel"], ylabel = Axis_kwargs["ylabel"], title = Axis_kwargs["title"])
+    ax = cm.Axis(f[1,1], xlabel = axis_kwargs["xlabel"], ylabel = axis_kwargs["ylabel"], title = axis_kwargs["title"])
 
     tlevels = model.Ĥ.dims[1]
     clevels = model.Ĥ.dims[2]
@@ -84,7 +83,11 @@ function PlotSingleModeEvolution(model,
                 if c == 1
                     label = string(t)
                 end
-            if state in keys(EVs)
+            if (state in keys(EVs)) | (string(state) in keys(EVs))
+                if string(state) in keys(EVs)
+                    state = string(state)
+                end
+
                 x = tlist[1:plot_every:end]
                 y = EVs[state][1:plot_every:end]
 
@@ -97,7 +100,7 @@ function PlotSingleModeEvolution(model,
                 if maximum(abs.(y)) < show_thresh
                     alpha = 0.0
                 end
-                if state in emph_states
+                if (state in emph_states) | (state in string.(emph_states))
                     alpha = 1
                 end
 

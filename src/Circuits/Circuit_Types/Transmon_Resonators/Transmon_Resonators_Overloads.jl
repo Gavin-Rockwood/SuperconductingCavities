@@ -36,3 +36,19 @@ end
 function Utils.save_model(model::TransmonResonators; kwargs...)
     save_model(model; kwargs...)
 end
+
+function Dynamics.Get_Floquet_t0_Eigsys(model::TransmonResonators, args...; kwargs...)
+    Dynamics.Get_Floquet_t0_Eigsys(model.hilbertspace, args...; kwargs...)
+end
+
+function Dynamics.Floquet_t0_Sweep(model::TransmonResonators, args...; kwargs...)
+    Dynamics.Floquet_t0_Sweep(model.hilbertspace, model.n̂ₜ, args...; kwargs...)
+end
+
+function Dynamics.Get_Floquet_t0_Table(model::TransmonResonators, args...; kwargs...)
+    Dynamics.Get_Floquet_t0_Table(model.hilbertspace, args...; kwargs...)
+end
+
+function Dynamics.Propagator(model::TransmonResonators, args...; kwargs...)
+    Dynamics.Propagator(model.hilbertspace, args...; kwargs...)
+end

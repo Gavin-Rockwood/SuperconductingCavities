@@ -19,7 +19,9 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     run_name = "", 
     save_as_seperate_file = false, 
     tspan = [],
-    other_ds_properties = Dict{Any, Any}()
+    other_ds_properties = Dict{Any, Any}(),
+    use_logging = true,
+    progress_bar = true
     ) where T1<:Number
     #-------------------------------------------------------------
 
@@ -45,6 +47,10 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     if !("reltol" in keys(solver_kwargs))
         solver_kwargs["reltol"] = 1e-6
     end 
+
+    if !(progress_bar in keys(solver_kwargs))
+        solver_kwargs["progress_bar"] = progress_bar
+    end 
     
     chirp = false
     if "chirp_params" in keys(op_params)
@@ -54,23 +60,38 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     end
 
     
-    ν  = op_params["freq_d"]+op_params["shift"]
-
+    ν0  = op_params["freq_d"]
     if chirp
         @info "Using Chirp"
         α = 1
         if "chirp_factor" in keys(op_params)
             α = op_params["chirp_factor"]
         end
-        ν(ε) = op_params["freq_d"] + α*sum(op_params["chirp_params"][n]*ε^n for n in 1:length(op_params["chirp_params"]))+(1-α)*op_params["shift"]
+        ν = chirper(ν0, op_params["chirp_params"])# +(1-α)*op_params["shift"]+op_params["shift"]
+    else
+        ν = ν0+op_params["shift"]
     end
 
     ε = op_params["epsilon"]
 
+    digitize = false
+    if "digitize" in keys(op_params)
+        digitize = op_params["digitize"]
+    end
+    step_length = 0
+    if "step_length" in keys(op_params)
+        step_length = op_params["step_length"]
+    end
 
+    envelope = Envelopes.Get_Envelope(op_params["Envelope"], op_params["Envelope Args"], digitize = digitize, step_length = step_length)
 
-    drive_coef = Get_Drive_Coef(ν, ε, envelope = Envelopes.Get_Envelope(op_params["Envelope"], op_params["Envelope Args"]))
-
+    drive_coef = Get_Drive_Coef(ν, ε; envelope = envelope, drive_time = op_params["pulse_time"])
+    
+    if "filter_params" in keys(op_params)
+        filter_params = Dict(Symbol(key)=>val for (key, val) in op_params["filter_params"]) # turns the string keys into symbols. 
+        drive_coef = Get_Low_Pass_Filtered_Drive_Coef(drive_coef, op_params["pulse_time"]; filter_params...)
+    end
+    #return drive_coef
     Ĥ_D = Get_Ĥ_D(Ô_D, drive_coef)
 
 
@@ -82,12 +103,12 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     for key in keys(solver_kwargs)
         solver_kwargs_sym[Symbol(key)] = solver_kwargs[key]
     end
-    @info "Running Time Evolution"
+    if (use_logging) @info "Running Time Evolution" end
     sleep(0.01)
     res = qt.sesolve(2*π*Ĥ, ψ, tspan, H_t = Ĥ_D; solver_kwargs_sym...)
     @debug println(tostr(res))
     
-    @info "Time Evolution Complete"
+    if (use_logging)  @info "Time Evolution Complete" end
     sleep(0.01)
 
     if (save_step) | (to_return == "DS")
@@ -115,7 +136,7 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
         end
     end
 
-    @info "Done with $step_name"
+    if (use_logging) @info "Done with $step_name" end
 
     if to_return == "All"
         return res
@@ -164,9 +185,40 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
         solver_kwargs["reltol"] = 1e-6
     end 
 
+    chirp = false
+    if "chirp_params" in keys(op_params)
+        if !(op_params["chirp_params"] == nothing)
+            chirp = true
+        end
+    end
+
     ν  = op_params["freq_d"]+op_params["shift"]
     ε = op_params["epsilon"]
-    drive_coef = Get_Drive_Coef(ν, ε, envelope = Envelopes.Get_Envelope(op_params["Envelope"], op_params["Envelope Args"]))
+
+    if chirp
+        @info "Using Chirp"
+        α = 1
+        if "chirp_factor" in keys(op_params)
+            α = op_params["chirp_factor"]
+        end
+        ν(ε) = op_params["freq_d"] + α*sum(op_params["chirp_params"][n]*ε^n for n in 1:length(op_params["chirp_params"]))+(1-α)*op_params["shift"]
+    end
+
+    digitize = false
+    if "digitize" in keys(op_params)
+        digitize = op_params["digitize"]
+    end
+    step_length = 0
+    if "step_length" in keys(op_params)
+        step_length = op_params["step_length"]
+    end
+
+    envelope = Envelopes.Get_Envelope(op_params["Envelope"], op_params["Envelope Args"], digitize = digitize, step_length = step_length)
+    drive_coef = Get_Drive_Coef(ν, ε, envelope = envelope)
+
+    if "filter_params" in keys(op_params)
+        drive_coef = Get_Low_Pass_Filtered_Drive_Coef(drive_coef, op_params["pulse_time"]; op_params["filter_params"]...)
+    end
 
     Lₜ = Get_Lₜ(Ô_D, drive_coef)
 
@@ -225,8 +277,8 @@ function RunPulseSequence(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     solver_kwargs = Dict{Any, Any}(), 
     run_name = "", 
     save_path = "Data/",
-    Return = false,
-    clean_up = false
+    Return = true,
+    clean_up = true
     ) where T1<:Number
     #-------------------------------------------------------------
     if run_name == ""

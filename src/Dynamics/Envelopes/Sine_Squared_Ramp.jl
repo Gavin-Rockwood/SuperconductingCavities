@@ -3,7 +3,7 @@ function Sine_Squared_Ramp_Envelope(t; pulse_time = 0, ramp_time = 10)
     if t<=ramp_time
         return Sine_Squared_Envelope(t; ramp_time = ramp_time)
     elseif (t>ramp_time) & (t<flat_top_time+ramp_time)
-        return 1.0
+        return 1.0+0*t # the 0*t is for autodif :D
     elseif t>=flat_top_time+ramp_time
         return Sine_Squared_Envelope(t; ramp_time = ramp_time, offset = flat_top_time+ramp_time, phi = π/2)
     end

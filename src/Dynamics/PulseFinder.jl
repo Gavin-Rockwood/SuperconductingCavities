@@ -27,7 +27,7 @@ function FindStarkShift(hilbertspace::Hilbertspaces.Hilbertspace,
         push!(arg_list, arg_dict)
     end
 
-    floq_sweep_res = Floquet_0_Sweep(hilbertspace, drive_op, arg_list, use_logging = sub_logging)
+    floq_sweep_res = Floquet_t0_Sweep(hilbertspace, drive_op, arg_list, use_logging = sub_logging)
 
     states_to_track = Dict{Any, Any}()
 
@@ -41,7 +41,7 @@ function FindStarkShift(hilbertspace::Hilbertspaces.Hilbertspace,
     for state in dims(tracking_res, :State)
         ytemp = []
         for step in dims(tracking_res, :Step)
-            val = Real(tracking_res[State = At(state), Step = At(step)]["F_Energies"]/pi)
+            val = Real(tracking_res[State = At(string(state)), Step = At(step)]["F_Energies"]/pi)
             if val < 0
                 val += 2*abs(νs[step])
             end
@@ -119,9 +119,19 @@ function OptimizePulse(Ĥ,Ô_D,
     spns = 5,
     envelope_params = Dict{Any, Any}(),
     check_op = nothing,
-    chirp_params = nothing)
+    chirp_params = nothing, 
+    digitize = false, 
+    step_length = 2.3,
+    filter_params = Dict{Any, Any}()
+    )
     
     drive_args = Dict{Any, Any}("pulse_time" => 0.0, "epsilon" => ε, "Envelope" => envelope, "shift"=>stark_shift, "freq_d"=>freq_d)
+    if digitize
+        drive_args["digitize"] = true
+        drive_args["step_length"] = step_length
+        drive_args["filter_params"] = filter_params
+    end
+    
     drive_args["Envelope Args"] = envelope_args
     if chirp_params != nothing
         drive_args["chirp_params"] = chirp_params

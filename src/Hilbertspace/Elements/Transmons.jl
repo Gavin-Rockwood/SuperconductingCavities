@@ -24,9 +24,11 @@ module Transmons
 
         eigsys_full ::  qt.EigsolveResult
         eigsys :: qt.EigsolveResult
+
+        loss_ops :: Dict
     end
 
-    function init(Eᶜ, Eʲ, N_full, N, name;  ng = 0)
+    function init(Eᶜ, Eʲ, N_full, N, name;  ng = 0, κᶜ = 1/(56*1000), κᵈ = 1.2348024316109425e-5)
         dim_full = 2*N_full+1
         𝕀̂_full = qt.eye(dim_full)
         
@@ -68,8 +70,24 @@ module Transmons
 
 
         eigsys = qt.eigenstates(Ĥ)
+
+        D̂ = 0*Ĥ
+        for i in 1:(N-1) # this skips the 0 state becasue the coefficient is 0
+            ψi = qt.fock(N, i)
+            D̂ += sqrt(2*κᵈ)*sqrt(i)*ψi*ψi'
+        end
+
+        Ĉ = 0*Ĥ
+        for i in 0:(N-2)
+            ip1 = i+1
+            ψi = qt.fock(N, i)
+            ψip1 = qt.fock(N, ip1)
+            Ĉ += sqrt(κᶜ)*sqrt(ip1)*ψi*ψip1'
+        end
         
-        return Transmon(name = name, Eᶜ = Eᶜ, Eʲ = Eʲ, ng = ng, N_full = N_full, N = N, dim = N, Ĥ_full = Ĥ_full, Ĥ = Ĥ, n̂_full = n̂_full, n̂ = n̂, eigsys_full = eigsys_full, eigsys = eigsys)
+        loss_ops = Dict("Collapse" => Ĉ, "Dephasing" => D̂)
+
+        return Transmon(name = name, Eᶜ = Eᶜ, Eʲ = Eʲ, ng = ng, N_full = N_full, N = N, dim = N, Ĥ_full = Ĥ_full, Ĥ = Ĥ, n̂_full = n̂_full, n̂ = n̂, eigsys_full = eigsys_full, eigsys = eigsys, loss_ops = loss_ops)
     end
 
 end
