@@ -1,5 +1,8 @@
-function Bump_Envelope(t; pulse_time = 10, k = 1, a = 5)
-    x = (t-pulse_time/2)/(pulse_time/2)
+function Bump_Envelope(t; pulse_time = 10, k = 2, center = "None")
+    if center == "None"
+        center = pulse_time/2
+    end
+    x = (t-center)/(pulse_time/2)
     if x<=-1
         return 0
     elseif x>=1
@@ -7,7 +10,7 @@ function Bump_Envelope(t; pulse_time = 10, k = 1, a = 5)
     elseif x == 0
         return 1
     else
-        1/(1+exp(k*(a-(a+1)*abs(x))/(x^2-abs(x))))
+        return exp(k*x^2/(x^2-1))
     end
     
 end
@@ -19,11 +22,7 @@ function Bump_Envelope_Cal(x...)
 
     Envelope_Args["pulse_time"] = t
     if !("k" in keys(Envelope_Args))
-        Envelope_Args["k"] = 1
-    end
-
-    if !("a" in keys(Envelope_Args))
-        Envelope_Args["a"] = 5
+        Envelope_Args["k"] = 2
     end
 
     return Envelope_Args

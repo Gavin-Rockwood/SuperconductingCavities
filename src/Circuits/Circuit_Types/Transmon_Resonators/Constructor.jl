@@ -20,6 +20,12 @@ function init(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs; Nₜ_cut=60, ng = 0, Cavit
     if typeof(Nᵣs) <: Number
         Nᵣs = [Nᵣs]
     end
+    if typeof(Eᵒˢᶜs) <: Number
+        Eᵒˢᶜs = [Eᵒˢᶜs]
+    end
+    if typeof(gs) <: Number
+        gs = [gs]
+    end
     if typeof(κᶜᶜ) <: Number
         κᶜᶜ = [κᶜᶜ]
     end

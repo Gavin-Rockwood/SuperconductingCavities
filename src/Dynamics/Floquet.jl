@@ -1,6 +1,9 @@
 import QuantumToolbox as qt
 import OrdinaryDiffEq as ODE
+import LsqFit as LF
 using ProgressMeter
+using DimensionalData
+import Peaks
 
 #export Get_Floquet_eigsys, Floquet_0_Sweep
 
@@ -138,7 +141,175 @@ function Get_Floquet_t0_Table(hilbertspace::Hilbertspaces.Hilbertspace, Ĥ_D, T
 end
 
 
-function Get_Pulse_Floquet_Basis(hilbertspace::Hilbertspaces.Hilbertspace, Ĥ_D, op_params)
-    ε0 = op_params["epsilon"]
-    εt = ε0*Envelopes.Envelope_Dict[op_params["Envelope"]](t; op_params["Envelope Args"]...)
+function Get_Stroboscopic_Times(
+    ϕ::T1,
+    pulse_time;
+    sample_frequency = 10000,
+    sample_every = 1,
+    start_at = 2,
+    return_all = false,
+    recieving_drive_coef = false
+    ) where T1<:Union{Function, ODE.ODESolution}
+
+    times_to_sample = collect(LinRange(0, pulse_time, ceil(Int, sample_frequency*pulse_time)))
+
+    
+    f_for_peak_dc(t) = -abs.(ϕ(t))
+    f_for_peak(t) = -abs.(sin.(ϕ(t)))
+    
+
+    if recieving_drive_coef
+        for_peak = f_for_peak_dc.(times_to_sample)
+    else
+        for_peak = f_for_peak.(times_to_sample)
+    end
+    indices, heighs = Peaks.findmaxima(for_peak)
+
+    times = vcat(times_to_sample[indices][start_at:2*sample_every:end], [pulse_time])
+
+    if return_all
+        return [times, indices, heighs]
+    else
+        return times
+    end
+end
+
+function Get_Stroboscopic_Times(
+    pulse::T1;kwargs...
+    ) where T1<:Dict
+
+    ε0 = pulse["epsilon"]
+    ν0 = pulse["freq_d"]
+    νε = ν0+pulse["shift"]
+    
+    digitize = false
+    step_length = 2.3
+    if "digitize" in keys(pulse)
+        digitize = pulse["digitize"]
+        if "step_length" in keys(pulse)
+            step_length = pulse["step_length"]
+        end
+    end
+    envelope = Envelopes.Get_Envelope(pulse["Envelope"], pulse["Envelope Args"], digitize = digitize, step_length = step_length)
+    if "chirp_params" in keys(pulse)
+        νε=chirper(ν0, pulse["chirp_params"])
+    end
+
+    filtered = false
+    drive_coef = Get_Drive_Coef(νε, ε0, envelope = envelope, drive_time = pulse["pulse_time"]) 
+    if "filter_params" in keys(pulse)
+        filtered = true
+        filter_params = Dict(Symbol(key)=>val for (key, val) in pulse["filter_params"]) # turns the string keys into symbols. 
+        drive_coef = Get_Low_Pass_Filtered_Drive_Coef(drive_coef, pulse["pulse_time"]; filter_params...)
+    end
+
+    if filtered
+        recieving_drive_coef = true
+        ϕ(t) = drive_coef(t)
+    else
+        ϕ = Get_Drive_Coef(νε, ε0, envelope = envelope, drive_time = pulse["pulse_time"], return_ϕ = true)
+        recieving_drive_coef = false
+    end
+    Get_Stroboscopic_Times(ϕ, pulse["pulse_time"]; recieving_drive_coef = recieving_drive_coef, kwargs...)
+end
+
+function Get_Pulse_Floquet_Sweep(hilbertspace::Hilbertspaces.Hilbertspace,
+    Ĥ_D,
+    pulse_params;
+    stroboscopic_times = [],
+    sample_frequency = 100,
+    states_to_track = Dict{Any, Any}()
+    )
+    drive_time = pulse_params["pulse_time"]
+    ε0 = pulse_params["epsilon"]
+
+    digitize = false
+    step_length = 2.3
+    if "digitize" in keys(pulse_params)
+        digitize = pulse_params["digitize"]
+        if "step_length" in keys(pulse_params)
+            step_length = pulse_params["step_length"]
+        end
+    end
+
+    envelope = Envelopes.Get_Envelope(pulse_params["Envelope"], pulse_params["Envelope Args"], digitize = digitize, step_length = step_length)
+
+    εt(t) = ε0*envelope(t)
+    ν0 = pulse_params["freq_d"]
+    νε(ε) = ν0+pulse_params["shift"]
+
+    drive_coef = Get_Drive_Coef(νε, ε0, envelope = envelope, drive_time = drive_time) 
+
+    filtered = false
+    if "filter_params" in keys(pulse_params)
+        filtered = true
+        filter_params = Dict(Symbol(key)=>val for (key, val) in pulse_params["filter_params"]) # turns the string keys into symbols. 
+        println("Filtering: $filtered")
+        drive_coef = Get_Low_Pass_Filtered_Drive_Coef(drive_coef, pulse_params["pulse_time"]; filter_params...)
+    end
+
+    if "chirp_params" in keys(pulse_params)
+        νε=chirper(ν0, pulse_params["chirp_params"])
+    end
+
+    if length(stroboscopic_times) == 0
+        ϕ = Get_Drive_Coef(νε, ε0, envelope=envelope, return_ϕ = true, drive_time = drive_time)
+        stroboscopic_times = Get_Stroboscopic_Times(ϕ, pulse_params["pulse_time"]; sample_frequency = sample_frequency)
+    end
+
+    list_of_params = []
+    rt = pulse_params["Envelope Args"]["ramp_time"]
+    pt = pulse_params["pulse_time"]
+    for i in 1:length(stroboscopic_times)
+        t = stroboscopic_times[i]
+        if filtered
+            ti = t
+            if i>1
+                ti = stroboscopic_times[i-1]
+            end
+            tf = t
+            if i<length(stroboscopic_times)
+                tf = stroboscopic_times[i+1]
+            end
+            times_to_sample = collect(ti:1/sample_frequency:tf)
+
+            signal = drive_coef.(times_to_sample)
+            
+            to_fit(t, p) = 2*π.*p[1].*εt.(t).*sin.(2*π.*p[2].*t.+p[3])
+            #to_fit(t,p) = 2*π.*εt.(t).*p[1].*sin.(2*π.*p[2].*t.+p[3])
+            fit = LF.curve_fit(to_fit, times_to_sample, signal, [maximum(signal), νε(εt(2*rt)), 0.0])
+            #println("Fit Params: "*Utils.tostr(fit.param))
+            push!(list_of_params, Dict{Any,Any}("ν" => abs(fit.param[2]), "ε" => εt(t)*fit.param[1]))#/(2*π))) # This is the wrong frequency to use. Maybe need a phase shift???? 
+
+        else
+            push!(list_of_params, Dict{Any,Any}("ν" => νε(εt(t)), "ε" => εt(t)))
+        end
+    end
+
+    if length(states_to_track) == 0
+        states_to_track = hilbertspace.dressed_states
+    end
+    floq_sweep_res = Floquet_t0_Sweep(hilbertspace, Ĥ_D, list_of_params; states_to_track = states_to_track)
+
+    return floq_sweep_res
+end
+
+
+function Pulse_Floquet_Projections(
+    pulse_res::T1,
+    floq_sweep::T2
+    ) where T1 <: qt.TimeEvolutionSol where T2<:DimMatrix
+
+
+    states = collect(floq_sweep.dims[findall(x -> x == :State, name(floq_sweep.dims))[1]])
+
+    projections = Dict{Any, Any}()
+    for state in states
+        projections[state] = []
+        for i in 1:length(pulse_res.times)
+            Φ = floq_sweep[State = At(state), Step = At(i)]["ψ"]
+            push!(projections[state], abs(Φ'*pulse_res.states[i])^2)
+        end
+    end
+    return projections
 end

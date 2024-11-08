@@ -21,7 +21,8 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     tspan = [],
     other_ds_properties = Dict{Any, Any}(),
     use_logging = true,
-    progress_bar = true
+    progress_bar = true,
+    return_drive_coef = false # this is a flag to return the drive coef instead of running the time evolution. Used for debugging!
     ) where T1<:Number
     #-------------------------------------------------------------
 
@@ -78,7 +79,7 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     if "digitize" in keys(op_params)
         digitize = op_params["digitize"]
     end
-    step_length = 0
+    step_length = 2.3
     if "step_length" in keys(op_params)
         step_length = op_params["step_length"]
     end
@@ -91,7 +92,10 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
         filter_params = Dict(Symbol(key)=>val for (key, val) in op_params["filter_params"]) # turns the string keys into symbols. 
         drive_coef = Get_Low_Pass_Filtered_Drive_Coef(drive_coef, op_params["pulse_time"]; filter_params...)
     end
-    #return drive_coef
+    
+    if return_drive_coef
+        return drive_coef
+    end
     Ĥ_D = Get_Ĥ_D(Ô_D, drive_coef)
 
 

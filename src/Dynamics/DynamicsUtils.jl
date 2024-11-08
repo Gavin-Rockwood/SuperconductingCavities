@@ -14,14 +14,20 @@ function Get_Drive_Coef(ν::T1,
     ε;
     envelope = Envelopes.Square_Envelope,
     drive_time = 0,
+    return_ϕ = false,
     return_ℂ = false
     )where T1<:Number
     
+    ϕ(t) = 2π*ν*t
+    if return_ϕ
+        return ϕ
+    end
+
     function drive_coef(t, params...; return_ℂ = return_ℂ, kwargs...)
         if return_ℂ
-            return 2*π*ε*envelope(t)*exp(-2π*ν*t*1im)
+            return 2*π*ε*envelope(t)*exp(-1im*ϕ(t))
         else 
-            return 2*π*ε*envelope(t)*sin(2π*ν*t)
+            return 2*π*ε*envelope(t)*sin(ϕ(t))
         end
     end
 
@@ -68,10 +74,9 @@ end
 
 """
 This applies a low pass butterworth filter to the drive coefficient. The default is a cut off of 4 GHz with 20 poles. The sampling rate for the 
-FFT defaults to 100GHz. This function using the imaginary part of the drive coefficient as I want the sine part! This setting is controlled
-by the re_or_im keyword argument.
+FFT defaults to 100GHz. 
 """
-function Get_Low_Pass_Filtered_Drive_Coef(drive_coef, drive_time; freq_cutoff = 4, poles = 20, fs = 1e2, re_or_im = imag, return_T = false)
+function Get_Low_Pass_Filtered_Drive_Coef(drive_coef, drive_time; freq_cutoff = 4, poles = 20, fs = 1e2, re_or_im = real, return_T = false)
     time = collect(0:1/fs:(drive_time+1/fs))
     signal = drive_coef.(time, return_ℂ = true)
 

@@ -8,6 +8,7 @@ module Envelopes
     include("Sine_Squared.jl")
     include("Sine_Squared_Ramp.jl")
     include("Bump.jl")
+    include("Bump_Ramp.jl")
 
     """
     This takes an envelope function and digitizes it to a step length. 
