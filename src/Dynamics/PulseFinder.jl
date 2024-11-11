@@ -157,9 +157,11 @@ function OptimizePulse(Ĥ,Ô_D,
 
             run_res = RunSingleOperator(Ĥ, Ô_D, ψ1, drive_args, to_return = "Last", save_step = false, solver_kwargs = solver_kwargs, spns = spns, step_name = "Level_"*string(level)*"_step_"*string(i))
             
+            #return run_res
             goodness = abs(run_res'*ψ2)^2
-
+            
             if typeof(check_op)<:qt.QuantumObject
+                @info "Using Check Op"
                 goodness = abs(run_res'*check_op*run_res)
             end
 
