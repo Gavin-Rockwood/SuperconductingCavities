@@ -285,8 +285,11 @@ function RunPulseSequence(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     clean_up = true
     ) where T1<:Number
     #-------------------------------------------------------------
+    df = DateFormat("e-u-d-yy.H.M")
+    t = now()
+    the_time = string(Dates.format(t, df))
     if run_name == ""
-        run_name = "Operator_Sequence_"*string(now())
+        run_name = "Operator_Sequence_"*the_time
     end
     println("The Name for this run is: "*run_name)
     println("It is being saved at: "*save_path)
@@ -325,8 +328,11 @@ function RunPulseSequence(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     other_ds_properties = Dict{Any, Any}()
     ) where T1<:Number
     #-------------------------------------------------------------
+    df = DateFormat("e-u-d-yy.H.M")
+    t = now()
+    the_time = string(Dates.format(t, df))
     if run_name == ""
-        run_name = "Operator_Sequence_"*string(now())
+        run_name = "Operator_Sequence_"*the_time
     end
     println("The Name for this run is: "*run_name)
     println("It is being saved at: "*save_path)
