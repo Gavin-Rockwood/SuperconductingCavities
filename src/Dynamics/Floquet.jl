@@ -296,9 +296,9 @@ end
 
 
 function Pulse_Floquet_Projections(
-    pulse_res::T1,
+    pulse_res,
     floq_sweep::T2
-    ) where T1 <: qt.TimeEvolutionSol where T2<:DimMatrix
+    ) where T2<:DimMatrix
 
 
     states = collect(floq_sweep.dims[findall(x -> x == :State, name(floq_sweep.dims))[1]])
@@ -306,9 +306,9 @@ function Pulse_Floquet_Projections(
     projections = Dict{Any, Any}()
     for state in states
         projections[state] = []
-        for i in 1:length(pulse_res.times)
+        for i in 1:length(pulse_res)
             Φ = floq_sweep[State = At(state), Step = At(i)]["ψ"]
-            push!(projections[state], abs(Φ'*pulse_res.states[i])^2)
+            push!(projections[state], abs(Φ'*pulse_res[i])^2)
         end
     end
     return projections
