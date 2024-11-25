@@ -78,11 +78,11 @@ module Transmons
         end
 
         Ĉ = 0*Ĥ
-        for i in 0:(N-2)
-            ip1 = i+1
+        for i in 1:(N-1)
+            im1 = i-1
+            ψim1 = qt.fock(N, i-1)
             ψi = qt.fock(N, i)
-            ψip1 = qt.fock(N, ip1)
-            Ĉ += sqrt(κᶜ)*sqrt(ip1)*ψi*ψip1'
+            Ĉ += sqrt(κᶜ)*sqrt(i)*ψim1*ψi'
         end
         
         loss_ops = Dict("Collapse" => Ĉ, "Dephasing" => D̂)

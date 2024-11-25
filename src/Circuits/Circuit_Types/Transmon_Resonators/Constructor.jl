@@ -6,6 +6,7 @@
     Ĥ :: qt.QuantumObject
     n̂ₜ :: qt.QuantumObject
     n̂ᵣs :: Vector
+    Ô_drive :: qt.QuantumObject
 
     CandD_Ops :: Dict
 
@@ -16,7 +17,7 @@
 end
 
 
-function init(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs; Nₜ_cut=60, ng = 0, Cavity_Names = [], κᵗᶜ = 1/(56*1000), κᵗᵈ = 1.2348024316109425e-5, κᶜᶜ = [1/(1000*1000)], κᶜᵈ = [0], Model_Name = "Default", Save_Path = "")
+function init(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs; dₜ = 1, dᵣ = 0,  Nₜ_cut=60, ng = 0, Cavity_Names = [], κᵗᶜ = 1/(56*1000), κᵗᵈ = 1.2348024316109425e-5, κᶜᶜ = [1/(1000*1000)], κᶜᵈ = [0], Model_Name = "Default", Save_Path = "")
     if typeof(Nᵣs) <: Number
         Nᵣs = [Nᵣs]
     end
@@ -31,6 +32,9 @@ function init(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs; Nₜ_cut=60, ng = 0, Cavit
     end
     if typeof(κᶜᵈ) <: Number
         κᶜᵈ = [κᶜᵈ]
+    end
+    if typeof(dᵣ) <: Number
+        dᵣ = [dᵣ]
     end
 
     if !(length(Eᵒˢᶜs) == length(Nᵣs) & length(Nᵣs) == length(gs))
@@ -61,7 +65,8 @@ function init(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs; Nₜ_cut=60, ng = 0, Cavit
 
     for i in 1:length(gs)
         name = Cavity_Names[i]
-        interaction = Dict("ops"=>Dict(Components["Transmon"].name => Components["Transmon"].n̂, Components[name].name => Components[name].â+Components[name].â'), "g"=>gs[i])
+        #interaction = Dict("ops"=>Dict(Components["Transmon"].name => Components["Transmon"].n̂, Components[name].name => (Components[name].â+Components[name].â')), "g"=>gs[i])
+        interaction = Dict("ops"=>Dict(Components["Transmon"].name => Components["Transmon"].n̂, Components[name].name => 1im*(Components[name].â-Components[name].â')), "g"=>gs[i])
         push!(Interactions, interaction)
     end
     
@@ -77,6 +82,11 @@ function init(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs; Nₜ_cut=60, ng = 0, Cavit
         push!(n̂ᵣs, HS.IdentityWrapper(hilbertspace, Dict(name=>Components[name].N̂), order = order))
     end
     
+    Ô_drive = dₜ*n̂ₜ
+    for i in 1:length(n̂ᵣs)
+        Ô_drive += dᵣ[i]*n̂ᵣs[i]
+    end
+
     # CandD_Ops = Dict{Any, Any}()
 
     # # Bare Collapse Operators
@@ -106,6 +116,6 @@ function init(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs; Nₜ_cut=60, ng = 0, Cavit
     end
 
 
-    return TransmonResonators(params = params, hilbertspace=hilbertspace, n̂ₜ=n̂ₜ, Stuff = Dict{Any, Any}(), dressed_states = hilbertspace.dressed_states, dressed_energies = hilbertspace.dressed_energies, order = order, n̂ᵣs = n̂ᵣs, CandD_Ops = loss_ops, Ĥ = hilbertspace.Ĥ)
+    return TransmonResonators(params = params, hilbertspace=hilbertspace, n̂ₜ=n̂ₜ, Stuff = Dict{Any, Any}(), dressed_states = hilbertspace.dressed_states, dressed_energies = hilbertspace.dressed_energies, order = order, n̂ᵣs = n̂ᵣs, CandD_Ops = loss_ops, Ĥ = hilbertspace.Ĥ, Ô_drive = Ô_drive)
 
 end

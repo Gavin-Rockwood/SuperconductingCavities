@@ -10,16 +10,16 @@ function Dynamics.FindStarkShift(model::TransmonResonators,
 
     state_names = [string(state1), string(state2)]
     
-    Dynamics.FindStarkShift(model.hilbertspace, model.n̂ₜ, ψ1, ψ2, ν, args...;state_names = state_names, kwargs...)
+    Dynamics.FindStarkShift(model.hilbertspace, model.Ô_drive, ψ1, ψ2, ν, args...;state_names = state_names, kwargs...)
 end
 
 function Dynamics.OptimizePulse(model::TransmonResonators, args...; kwargs...)
-    Dynamics.OptimizePulse(model.Ĥ, model.n̂ₜ, args...; kwargs... )
+    Dynamics.OptimizePulse(model.Ĥ, model.Ô_drive, args...; kwargs... )
 end
 
 
 function Dynamics.RunSingleOperator(model::TransmonResonators, args...; kwargs...)
-    Dynamics.RunSingleOperator(model.Ĥ, model.n̂ₜ, args...; kwargs...)
+    Dynamics.RunSingleOperator(model.Ĥ, model.Ô_drive, args...; kwargs...)
 end
 
 function Dynamics.RunPulseSequence(model::TransmonResonators,
@@ -29,7 +29,7 @@ function Dynamics.RunPulseSequence(model::TransmonResonators,
     kwargs...
     ) where T1<:Number
 
-    Dynamics.RunPulseSequence(model.Ĥ, model.n̂ₜ, state, op_sequence, model.Stuff["op_drive_params"], args...; kwargs...)
+    Dynamics.RunPulseSequence(model.Ĥ, model.Ô_drive, state, op_sequence, model.Stuff["op_drive_params"], args...; kwargs...)
 end
 
 
