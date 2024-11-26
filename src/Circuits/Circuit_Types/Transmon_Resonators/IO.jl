@@ -6,6 +6,7 @@ function load_python(file)
     Eᵒˢᶜs = saved_dict["Main_Config"]["E_osc"]
     gs = saved_dict["Main_Config"]["g"]
     ng = saved_dict["Main_Config"]["transmon_ng"]
+
     
     Nₜ = saved_dict["Main_Config"]["transmon_truncated_dim"]
     Nᵣs = saved_dict["Main_Config"]["resonator_truncated_dim"]
@@ -98,6 +99,18 @@ function load(file)
     gs = saved_dict["Main_Config"]["gs"]
     ng = saved_dict["Main_Config"]["ng"]
     
+    if "d_t" in keys(saved_dict["Main_Config"])
+        dₜ = saved_dict["Main_Config"]["d_t"]
+    else
+        dₜ = 1
+    end
+    if "d_r" in keys(saved_dict["Main_Config"])
+        dᵣ = saved_dict["Main_Config"]["d_r"]
+    else
+        dᵣ = 0
+    end
+    
+
     Nₜ = saved_dict["Main_Config"]["Nt"]
     Nᵣs = saved_dict["Main_Config"]["Nrs"]
     Nₜ_cut = saved_dict["Main_Config"]["Nt_cut"]
@@ -113,7 +126,7 @@ function load(file)
 
     
 
-    model = init(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs, Nₜ_cut=Nₜ_cut, ng=ng, Cavity_Names=Cavity_Names, κᵗᶜ=κᵗᶜ, κᵗᵈ=κᵗᵈ, κᶜᶜ = κᶜᶜ, Model_Name = Model_Name, Save_Path = Save_Path)
+    model = init(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs, Nₜ_cut=Nₜ_cut, ng=ng, Cavity_Names=Cavity_Names, κᵗᶜ=κᵗᶜ, κᵗᵈ=κᵗᵈ, κᶜᶜ = κᶜᶜ, Model_Name = Model_Name, Save_Path = Save_Path, dₜ = dₜ, dᵣ = dᵣ)
     
     
     for key in keys(saved_dict["Stuff"])
