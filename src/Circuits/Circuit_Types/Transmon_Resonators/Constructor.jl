@@ -72,7 +72,7 @@ function init(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs; dₜ = 1, dᵣ = 0,  Nₜ_
     
     hilbertspace = HS.init(Components, Interactions, order = order)
     
-    params = Dict{Any, Any}("E_C"=>Eᶜ, "E_J"=>Eʲ, "E_oscs"=>Eᵒˢᶜs, "gs"=>gs, "Nt"=>Nₜ, "Nrs"=>Nᵣs, "Nt_cut"=>Nₜ_cut, "ng"=>ng, "kappa_tc" => κᵗᶜ, "kappa_td" => κᵗᵈ, "kappa_cc" => κᶜᶜ, "Cavity_Names" => Cavity_Names, "Model_Name" => Model_Name, "Save_Path"=>Save_Path, "ModelType" => "TransmonResonators")
+    params = Dict{Any, Any}("E_C"=>Eᶜ, "E_J"=>Eʲ, "E_oscs"=>Eᵒˢᶜs, "gs"=>gs, "Nt"=>Nₜ, "Nrs"=>Nᵣs, "Nt_cut"=>Nₜ_cut, "ng"=>ng, "kappa_tc" => κᵗᶜ, "kappa_td" => κᵗᵈ, "kappa_cc" => κᶜᶜ, "Cavity_Names" => Cavity_Names, "Model_Name" => Model_Name, "Save_Path"=>Save_Path, "ModelType" => "TransmonResonators", "d_t" => dₜ, "d_r" => dᵣ)
 
     n̂ₜ = HS.IdentityWrapper(hilbertspace, Dict("Transmon"=>Components["Transmon"].n̂), order = order)
 
