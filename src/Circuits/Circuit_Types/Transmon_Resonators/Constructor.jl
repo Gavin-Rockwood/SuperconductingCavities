@@ -77,14 +77,16 @@ function init(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs; dₜ = 1, dᵣ = 0,  Nₜ_
     n̂ₜ = HS.IdentityWrapper(hilbertspace, Dict("Transmon"=>Components["Transmon"].n̂), order = order)
 
     n̂ᵣs = []
+    âᵣs = []
     for i in 1:length(Nᵣs)
         name = Cavity_Names[i]
         push!(n̂ᵣs, HS.IdentityWrapper(hilbertspace, Dict(name=>Components[name].N̂), order = order))
+        push!(âᵣs, HS.IdentityWrapper(hilbertspace, Dict(name=>Components[name].â), order = order))
     end
     
     Ô_drive = dₜ*n̂ₜ
     for i in 1:length(n̂ᵣs)
-        Ô_drive += dᵣ[i]*n̂ᵣs[i]
+        Ô_drive += dᵣ[i]*âᵣs[i]
     end
 
     # CandD_Ops = Dict{Any, Any}()

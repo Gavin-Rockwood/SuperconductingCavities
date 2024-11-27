@@ -104,9 +104,11 @@ This gets the drive hamiltonian for a given operator and drive coefficient
 function Get_Ĥ_D(op::qt.QuantumObject, drive_coef::Union{Nothing, Function}; TDOS = true, params = nothing, init_time = 0.0)
     drive_coef = (drive_coef isa Nothing) ? (t)->1 : drive_coef
     if TDOS
-        return qt.TimeDependentOperatorSum([drive_coef], [op], params = params, init_time = init_time)
+        drive_coef_half(t,params...) = drive_coef(t, params...)/2
+        drive_coef_half_dag(t, params...) = conj(drive_coef(t, params...))/2
+        return qt.TimeDependentOperatorSum([drive_coef_half, drive_coef_half_dag], [op, op'], params = params, init_time = init_time)
     else
-        return t -> drive_coef(t)*op
+        return t -> 0.5*(drive_coef(t)*op+(drive_coef(t)*op)')
     end
 end
 
