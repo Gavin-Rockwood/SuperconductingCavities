@@ -29,11 +29,11 @@ module Resonators
 
         # Cavity Collapse
         Ĉ = 0*Ĥ
-        for i in 0:(N-2)
-            ip1 = i+1
+        for i in 1:(N-1)
+            im1 = i-1
             ψi = qt.fock(N, i)
-            ψip1 = qt.fock(N, ip1)
-            Ĉ += sqrt(κᶜ)*sqrt(ip1)*ψi*ψip1'
+            ψim1 = qt.fock(N, im1)
+            Ĉ += sqrt(κᶜ)*sqrt(i)*ψim1*ψi'
         end
 
         D̂ = 0*Ĥ

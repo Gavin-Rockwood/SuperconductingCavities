@@ -296,9 +296,9 @@ end
 
 
 function Pulse_Floquet_Projections(
-    pulse_res::T1,
+    pulse_res,
     floq_sweep::T2
-    ) where T1 <: qt.TimeEvolutionSol where T2<:DimMatrix
+    ) where T2<:DimMatrix
 
 
     states = collect(floq_sweep.dims[findall(x -> x == :State, name(floq_sweep.dims))[1]])
@@ -306,10 +306,42 @@ function Pulse_Floquet_Projections(
     projections = Dict{Any, Any}()
     for state in states
         projections[state] = []
-        for i in 1:length(pulse_res.times)
+        for i in 1:length(pulse_res)
             Φ = floq_sweep[State = At(state), Step = At(i)]["ψ"]
-            push!(projections[state], abs(Φ'*pulse_res.states[i])^2)
+            push!(projections[state], abs(Φ'*pulse_res[i])^2)
         end
     end
     return projections
+end
+
+
+"""
+    This reformats the floquet sweep results from an YAXARRAY into a set of nested dictionaries that can be saved as a .json file.
+"""
+function Reformat_Sweep_Results_To_Save(floq_sweep)
+    dims = floq_sweep.dims;
+    tracked_items = collect(keys(floq_sweep[1]));
+    tracked_items[findall(x->x=="ψ", tracked_items)[1]] = "Quasimodes"
+
+    dim_names = Dimensions.label.(dims)
+    floq_sweep_new = Dict{Any, Any}()
+
+    for state in dims[1].val
+        floq_sweep_new[state] = Dict{Any, Any}()
+        for step in dims[2].val
+            floq_sweep_new[state][step] = Dict{Any, Any}()
+            for item in tracked_items
+                item_name = item
+                if item_name == "Quasimodes"
+                    item_name = "ψ"
+                end
+                dat = floq_sweep[State = At(state), Step = At(step)][item_name]
+                if typeof(dat) <: qt.QuantumObject
+                    dat = dat.data
+                end
+                floq_sweep_new[state][step][item] = dat
+            end
+        end
+    end
+    return floq_sweep_new
 end

@@ -19,6 +19,7 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     run_name = "", 
     save_as_seperate_file = false, 
     tspan = [],
+    strob_skip = 1,
     other_ds_properties = Dict{Any, Any}(),
     use_logging = true,
     progress_bar = true,
@@ -99,8 +100,12 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     Ĥ_D = Get_Ĥ_D(Ô_D, drive_coef)
 
 
-    if length(tspan) == 0
+    if (length(tspan) == 0) & (spns != "Stroboscopic")
         tspan = collect(LinRange(0, op_params["pulse_time"], Int(ceil(op_params["pulse_time"]*spns))+1))
+    end
+
+    if spns == "Stroboscopic"
+        tspan = Get_Stroboscopic_Times(op_params)[1:strob_skip:end]
     end
 
     solver_kwargs_sym = Dict{Symbol, Any}()
@@ -163,6 +168,7 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     run_name = "", 
     save_as_seperate_file = false, 
     tspan = [],
+    strob_skip = 1,
     other_ds_properties = Dict{Any, Any}()
     ) where T1<:Number
     #-------------------------------------------------------------
@@ -226,8 +232,11 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
 
     Lₜ = Get_Lₜ(Ô_D, drive_coef)
 
-    if length(tspan) == 0
+    if (length(tspan) == 0) & (spns != "Stroboscopic")
         tspan = collect(LinRange(0, op_params["pulse_time"], Int(ceil(op_params["pulse_time"]*spns))+1))
+    end
+    if spns == "Stroboscopic"
+        tspan = Get_Stroboscopic_Times(op_params)[1:strob_skip:end]
     end
     
     solver_kwargs_sym = Dict{Symbol, Any}()
@@ -282,7 +291,8 @@ function RunPulseSequence(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     run_name = "", 
     save_path = "Data/",
     Return = true,
-    clean_up = true
+    clean_up = true,
+    strob_skip = 1,
     ) where T1<:Number
     #-------------------------------------------------------------
     df = DateFormat("e-u-d-yy.H.M")
@@ -303,7 +313,7 @@ function RunPulseSequence(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
         op = op_sequence[i]
         @info "Running operator $op"
         step_name = "Step_"*string(i)
-        ψ = RunSingleOperator(Ĥ,Ô_D, ψ, op_params_dict[op]; spns = spns, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = step_name, to_return = "Last", save_step = true, op_name = op, other_ds_properties = other_ds_properties)
+        ψ = RunSingleOperator(Ĥ,Ô_D, ψ, op_params_dict[op]; spns = spns, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = step_name, to_return = "Last", save_step = true, op_name = op, other_ds_properties = other_ds_properties, strob_skip = strob_skip)
     end
     @info "Done With Running Sequence"
     if Return
@@ -325,7 +335,8 @@ function RunPulseSequence(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     run_name = "", 
     save_path = "Data/", 
     c_ops = [],
-    other_ds_properties = Dict{Any, Any}()
+    other_ds_properties = Dict{Any, Any}(),
+    strob_skip = 1
     ) where T1<:Number
     #-------------------------------------------------------------
     df = DateFormat("e-u-d-yy.H.M")
@@ -349,7 +360,7 @@ function RunPulseSequence(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
         op = op_sequence[i]
         @info "Step $i/$num_steps: Running operator $op"
         step_name = "Step_"*string(i)
-        ρ = RunSingleOperator(Ĥ,Ô_D, ρ, op_params_dict[op]; spns = spns, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = step_name, to_return = "Last", c_ops = c_ops, save_step = true, op_name = op, other_ds_properties = other_ds_properties)
+        ρ = RunSingleOperator(Ĥ,Ô_D, ρ, op_params_dict[op]; spns = spns, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = step_name, to_return = "Last", c_ops = c_ops, save_step = true, op_name = op, other_ds_properties = other_ds_properties, strob_skip = strob_skip)
     end
     @info "Done With Running Sequence"
 end
