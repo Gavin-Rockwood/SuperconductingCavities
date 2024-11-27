@@ -25,11 +25,7 @@ module Utils
 
     function Qobj_List_To_DS(QOL; cube_name = :Default, cube_properties = Dict{Any, Any}(), ds_properties = Dict{Any, Any}(), step_name = :Step)
         step1 = collect.(qt.sparse_to_dense.(QOL))
-<<<<<<< HEAD
         dat_to_save = 0
-=======
-        
->>>>>>> b294d0c (fixed stackoverflow error in Qobs_list_to_DS)
         if length(size(step1[1])) == 1
             step2 = reduce.(hcat, collect.(reim.(step1)))
             a = length(step2[1][:,1])
@@ -40,7 +36,6 @@ module Utils
             axlist = (Dim{step_name}(1:dim[1]),  Dim{:i}(1:dim[2]), Dim{:P}(["Re", "Im"]))
             dat_to_save = step3
         elseif length(size(step1[1])) > 1
-<<<<<<< HEAD
             step2 = collect(reim.(step1))
             step3 = reduce.((x,y) -> cat(x, y, dims = 3), step2)
             a = size(step3[1])[1]
@@ -51,14 +46,6 @@ module Utils
             step5 = permutedims(step4, (4,1,2,3));
             println(size(step5))
             dim = size(step5)
-=======
-            step2 = reduce.(hcat, collect.(reim.(step1)))
-            a = length(step2[1][:,1])
-            b = length(step2[1][1,:])
-            c = length(step2)
-            step3 = permutedims(reshape(mapreduce(xs -> vec(reduce(hcat, xs)), hcat, step2), a,a,b,c), (3,1,2.4));
-            dim = size(step3)
->>>>>>> b294d0c (fixed stackoverflow error in Qobs_list_to_DS)
             
             axlist = (Dim{step_name}(1:dim[1]),  Dim{:i}(1:dim[2]), Dim{:j}(1:dim[3]), Dim{:P}(["Re", "Im"]))
             dat_to_save = step5
