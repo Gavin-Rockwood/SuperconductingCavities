@@ -113,7 +113,9 @@ function Get_Ĥ_D(op::qt.QuantumObject, drive_coef::Union{Nothing, Function}; T
 end
 
 function Get_Lₜ(op, drive_coef; params = nothing, init_time = 0.0)
-    return qt.TimeDependentOperatorSum([drive_coef], [qt.liouvillian(op)], params = params, init_time = init_time)
+    drive_coef_half(t,params...) = drive_coef(t, params...)/2
+    drive_coef_half_dag(t, params...) = conj(drive_coef(t, params...))/2
+    return qt.TimeDependentOperatorSum([drive_coef_half, drive_coef_half_dag], [qt.liouvillian(op), qt.liouvillian(op')], params = params, init_time = init_time)
 end
 
 """
