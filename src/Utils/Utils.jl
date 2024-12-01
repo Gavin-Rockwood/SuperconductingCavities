@@ -42,9 +42,7 @@ module Utils
             b = size(step3[1])[end]
             c = length(step3)
             step4 = reshape(mapreduce(xs -> vec(reduce(hcat, xs)), hcat, step3), a,a,b,c)
-            println(size(step4))
             step5 = permutedims(step4, (4,1,2,3));
-            println(size(step5))
             dim = size(step5)
             
             axlist = (Dim{step_name}(1:dim[1]),  Dim{:i}(1:dim[2]), Dim{:j}(1:dim[3]), Dim{:P}(["Re", "Im"]))
