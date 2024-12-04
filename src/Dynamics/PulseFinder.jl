@@ -4,6 +4,30 @@ using DimensionalData
 import LsqFit as LF
 import CairoMakie as cm
 
+
+"""
+    FindStarkShift(hilbertspace::Hilbertspaces.Hilbertspace, drive_op, ψ1, ψ2, ν, ε, starkshift_list; make_plot = true, state_names = ["ψ1", "ψ2"], sub_logging = true)
+
+Finds the Stark shift for a given set of parameters.
+
+# Arguments
+- `hilbertspace::Hilbertspaces.Hilbertspace`: The Hilbert space in which the calculations are performed.
+- `drive_op`: The driving operator.
+- `ψ1`: The first state vector.
+- `ψ2`: The second state vector.
+- `ν`: The base frequency.
+- `ε`: The drive amplitude.
+- `starkshift_list`: A list of Stark shifts to consider.
+- `make_plot::Bool`: Whether to generate a plot of the results. Default is `true`.
+- `state_names::Vector{String}`: Names of the states to track. Default is `["ψ1", "ψ2"]`.
+- `sub_logging::Bool`: Whether to enable sub-logging. Default is `true`.
+
+# Returns
+- A vector containing the fitted Stark shift and the inverse of the product of the second and third fit parameters.
+
+# Example
+"""
+
 function FindStarkShift(hilbertspace::Hilbertspaces.Hilbertspace,
     drive_op,
     ψ1,

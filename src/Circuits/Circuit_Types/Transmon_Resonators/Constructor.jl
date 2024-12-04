@@ -30,12 +30,23 @@ function init(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs; dₜ = 1, dᵣ = 0,  Nₜ_
     if typeof(κᶜᶜ) <: Number
         κᶜᶜ = [κᶜᶜ]
     end
+    if length(κᶜᶜ) != length(Nᵣs)
+        κᶜᶜ = [κᶜᶜ[1] for i in 1:length(Nᵣs)]
+    end
     if typeof(κᶜᵈ) <: Number
         κᶜᵈ = [κᶜᵈ]
     end
+    if length(κᶜᵈ) != length(Nᵣs)
+        κᶜᵈ = [κᶜᵈ[1] for i in 1:length(Nᵣs)]
+    end
+    
     if typeof(dᵣ) <: Number
         dᵣ = [dᵣ]
     end
+    if length(dᵣ) != length(Nᵣs)
+        dᵣ = [dᵣ[1] for i in 1:length(Nᵣs)]
+    end
+    
 
     if !(length(Eᵒˢᶜs) == length(Nᵣs) & length(Nᵣs) == length(gs))
         @error "The lengths of g, ω and Nᵣs not the same. Please Try again"

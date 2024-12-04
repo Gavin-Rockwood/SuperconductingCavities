@@ -71,7 +71,7 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
         end
         ν = chirper(ν0, op_params["chirp_params"])# +(1-α)*op_params["shift"]+op_params["shift"]
     else
-        ν = ν0+op_params["shift"]
+        ν = ν0.+op_params["shift"]
     end
 
     ε = op_params["epsilon"]
@@ -202,7 +202,7 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
         end
     end
 
-    ν  = op_params["freq_d"]+op_params["shift"]
+    ν  = op_params["freq_d"].+op_params["shift"]
     ε = op_params["epsilon"]
 
     if chirp
