@@ -154,6 +154,27 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     end
 end
 
+"""
+    RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject, 
+    ρ::qt.QuantumObject{<:AbstractArray{T1},qt.OperatorQuantumObject}, 
+    op_params; 
+    c_ops = nothing,  
+    spns = 5, 
+    solver_kwargs = Dict{Any, Any}(), 
+    save_step = false, 
+    step_name = "DEFAULT", 
+    op_name = "DEFAULT",
+    to_return = "All", 
+    save_path = "Data/", 
+    run_name = "", 
+    save_as_seperate_file = false, 
+    tspan = [],
+    strob_skip = 1,
+    other_ds_properties = Dict{Any, Any}()
+    ) where T1<:Number
+
+TBW
+"""
 function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject, 
     ρ::qt.QuantumObject{<:AbstractArray{T1},qt.OperatorQuantumObject}, 
     op_params; 
@@ -283,7 +304,7 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
 end
 
 function RunPulseSequence(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject, 
-    ψ::qt.QuantumObject{<:AbstractVector{T1}, qt.KetQuantumObject, 2}, 
+    ψ::qt.QuantumObject{<:AbstractVector{T1}, qt.KetQuantumObject}, 
     op_sequence,
     op_params_dict; 
     spns = 5, 

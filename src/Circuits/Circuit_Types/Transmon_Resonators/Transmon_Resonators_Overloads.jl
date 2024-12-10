@@ -23,7 +23,7 @@ function Dynamics.RunSingleOperator(model::TransmonResonators, args...; kwargs..
 end
 
 function Dynamics.RunPulseSequence(model::TransmonResonators,
-    state::Union{qt.QuantumObject{<:AbstractVector{T1}, qt.KetQuantumObject, 2}, qt.QuantumObject{<:AbstractArray{T1},qt.OperatorQuantumObject}},
+    state::Union{qt.QuantumObject{<:AbstractVector{T1}, qt.KetQuantumObject}, qt.QuantumObject{<:AbstractArray{T1},qt.OperatorQuantumObject}},
     op_sequence,
     args...;
     kwargs...
