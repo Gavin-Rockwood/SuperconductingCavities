@@ -1,5 +1,5 @@
 {
-    "editor.fontLigatures": false,
+    "editor.fontLigatures": true,
     "editor.fontFamily": "\"JuliaMono\"",
     "workbench.colorTheme": "One Monokai"
 }

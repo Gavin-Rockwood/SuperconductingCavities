@@ -38,6 +38,9 @@ function PlotSingleModeEvolution(model,
     if !("ylable" in keys(axis_kwargs))
         axis_kwargs["ylabel"] = "Probability"
     end
+    if !("limits" in keys(axis_kwargs))
+        axis_kwargs["limits"] = ((nothing, nothing), (nothing, nothing))
+    end
 
     if !("markersize" in keys(scatterlines_kwargs))
         scatterlines_kwargs["markersize"] = 20
@@ -68,7 +71,9 @@ function PlotSingleModeEvolution(model,
     @info "Making Plot"
     f = cm.Figure(size = figure_kwargs["size"], figure_padding = figure_kwargs["figure_padding"], px_per_unit = figure_kwargs["px_per_unit"])
 
-    ax = cm.Axis(f[1,1], xlabel = axis_kwargs["xlabel"], ylabel = axis_kwargs["ylabel"], title = axis_kwargs["title"])
+    
+
+    ax = cm.Axis(f[1,1], xlabel = axis_kwargs["xlabel"], ylabel = axis_kwargs["ylabel"], title = axis_kwargs["title"], limits = axis_kwargs["limits"])
 
     tlevels = model.Ĥ.dims[1]
     clevels = model.Ĥ.dims[2]
@@ -97,12 +102,14 @@ function PlotSingleModeEvolution(model,
                 end
 
                 alpha = non_emph_alpha
-                if maximum(abs.(y)) < show_thresh
-                    alpha = 0.0
-                end
                 if (state in emph_states) | (state in string.(emph_states))
                     alpha = 1
                 end
+                
+                if maximum(abs.(y)) < show_thresh
+                    alpha = 0.0
+                end
+                
 
                 cm.scatterlines!(ax, x, real.(y), marker = markers[t+1], color = (cmap[c+1], alpha), markersize = scatterlines_kwargs["markersize"], linewidth = scatterlines_kwargs["linewidth"])
             end
@@ -125,7 +132,7 @@ function PlotSingleModeEvolution(model,
     #    label = "Transmon\nLevels"
     #end
     f[1,3] = cm.Legend(f, ax, label, framevisible = false)#; legend_kwargs...)#orientation = :horizontal, position = :ct)
-    cm.ylims!(ax, -0.1, 1.1)
+    #cm.ylims!(ax, -0.1, 1.1)
 
     cm.display(f)
 end
