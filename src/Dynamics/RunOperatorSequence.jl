@@ -386,16 +386,15 @@ function RunPulseSequence(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
 
     num_steps = length(op_sequence)
 
-    op_params = Dict{Any, Any}()
+    for i in 1:length(op_sequence)
+        op = op_sequence[i]
+        op_params = Dict{Any, Any}()
         if op[1:5] == "wait_"
             wait_time = parse(Float64, op[6:end])
             op_params = Dict("pulse_time" => wait_time, "freq_d" => 0, "shift" => 0, "epsilon" => 0, "Envelope" => "Square", "Envelope Args" => Dict{Any, Any}())
         else
             op_params = op_params_dict[op]
         end
-
-    for i in 1:length(op_sequence)
-        op = op_sequence[i]
         @info "Step $i/$num_steps: Running operator $op"
         step_name = "Step_"*string(i)
         ρ = RunSingleOperator(Ĥ,Ô_D, ρ, op_params; spns = spns, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = step_name, to_return = "Last", c_ops = c_ops, save_step = true, op_name = op, other_ds_properties = other_ds_properties, strob_skip = strob_skip)
