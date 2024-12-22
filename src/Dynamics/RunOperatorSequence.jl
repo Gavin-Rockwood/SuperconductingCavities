@@ -108,7 +108,7 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     end
 
     if spns == "Final"
-        tspan = [op_params[0,"pulse_time"]]
+        tspan = [0, op_params["pulse_time"]]
     end
 
     solver_kwargs_sym = Dict{Symbol, Any}()
