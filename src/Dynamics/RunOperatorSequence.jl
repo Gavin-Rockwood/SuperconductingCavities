@@ -120,7 +120,7 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     res = qt.sesolve(2*π*Ĥ, ψ, tspan, H_t = Ĥ_D; solver_kwargs_sym...)
     
     times = res.times
-    states = rest.states
+    states = res.states
     
     if spns == "Final"
         times = [times[end]]
