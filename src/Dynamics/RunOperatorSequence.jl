@@ -99,13 +99,16 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     end
     Ĥ_D = Get_Ĥ_D(Ô_D, drive_coef)
 
-
-    if (length(tspan) == 0) & (spns != "Stroboscopic")
+    if (length(tspan) == 0) & (typeof(spns) <: String)
         tspan = collect(LinRange(0, op_params["pulse_time"], Int(ceil(op_params["pulse_time"]*spns))+1))
     end
 
     if spns == "Stroboscopic"
         tspan = Get_Stroboscopic_Times(op_params)[1:strob_skip:end]
+    end
+
+    if spns == "Final"
+        tspan = [op_params["pulse_time"]]
     end
 
     solver_kwargs_sym = Dict{Symbol, Any}()
