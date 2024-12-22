@@ -118,7 +118,7 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     if (use_logging) @info "Running Time Evolution" end
     sleep(0.01)
     res = qt.sesolve(2*π*Ĥ, ψ, tspan, H_t = Ĥ_D; solver_kwargs_sym...)
-    @debug println(tostr(res))
+    @debug res
     
     if (use_logging)  @info "Time Evolution Complete" end
     sleep(0.01)
