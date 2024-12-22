@@ -1,9 +1,9 @@
 function Bump_Ramp_Envelope(t; pulse_time = 10, ramp_time = 1, k = 2)
     if t<ramp_time
         return Bump_Envelope(t, pulse_time = 2*ramp_time, k = k)
-    elseif (t<(pulse_time-ramp_time)) && (t>=ramp_time)
+    elseif (t<=(pulse_time-ramp_time)) && (t>=ramp_time)
         return 1
-    elseif t>=(pulse_time-ramp_time)
+    elseif t>(pulse_time-ramp_time)
         return Bump_Envelope(t, pulse_time = 2*ramp_time, k = k, center = pulse_time-ramp_time)
     end
 end
