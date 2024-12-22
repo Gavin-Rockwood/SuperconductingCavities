@@ -173,7 +173,6 @@ end
     other_ds_properties = Dict{Any, Any}()
     ) where T1<:Number
 
-TBW
 """
 function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject, 
     ρ::qt.QuantumObject{<:AbstractArray{T1},qt.OperatorQuantumObject}, 
@@ -314,6 +313,7 @@ function RunPulseSequence(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     Return = true,
     clean_up = true,
     strob_skip = 1,
+    reset_state=false # this is used if you want to run a bunch of operators starting in the same state and have the results go to one file 
     ) where T1<:Number
     #-------------------------------------------------------------
     df = DateFormat("e-u-d-yy.H.M")
@@ -330,6 +330,7 @@ function RunPulseSequence(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
         cube_order = cube_order*" "*step_name
     end
     other_ds_properties = Dict{Any, Any}("Order" => cube_order)
+    ψ0 = ψ
     for i in 1:length(op_sequence)
         op = op_sequence[i]
         @info "Running operator $op"
@@ -342,7 +343,11 @@ function RunPulseSequence(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
         else
             op_params = op_params_dict[op]
         end
+        if reset_state
+            ψ = ψ0
+        end
         ψ = RunSingleOperator(Ĥ,Ô_D, ψ, op_params; spns = spns, solver_kwargs = solver_kwargs, run_name = run_name, save_path = save_path, step_name = step_name, to_return = "Last", save_step = true, op_name = op, other_ds_properties = other_ds_properties, strob_skip = strob_skip)
+
     end
     @info "Done With Running Sequence"
     if Return

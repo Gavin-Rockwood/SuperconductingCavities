@@ -7,9 +7,9 @@ import Peaks
 
 #export Get_Floquet_eigsys, Floquet_0_Sweep
 
-function Get_Floquet_t0_Eigsys(hilbertspace::Hilbertspaces.Hilbertspace, Ĥ_D, T; t0 = 0)
+function Get_Floquet_t0_Eigsys(hilbertspace::Hilbertspaces.Hilbertspace, Ĥ_D, T; t0 = 0, progress_meter = false)
     
-    U = Propagator(hilbertspace, Ĥ_D, T+t0, ti = t0)
+    U = Propagator(hilbertspace, Ĥ_D, T+t0, ti = t0, progress_meter = progress_meter)
 
     λs, λ⃗s = qt.eigenstates(U)
     λs = -angle.(λs)/T#imag(log.(λs))
@@ -232,6 +232,7 @@ function Get_Pulse_Floquet_Sweep(hilbertspace::Hilbertspaces.Hilbertspace,
         end
     end
 
+    pulse_params = deepcopy(pulse_params)
     envelope = Envelopes.Get_Envelope(pulse_params["Envelope"], pulse_params["Envelope Args"], digitize = digitize, step_length = step_length)
 
     εt(t) = ε0*envelope(t)
@@ -258,6 +259,9 @@ function Get_Pulse_Floquet_Sweep(hilbertspace::Hilbertspaces.Hilbertspace,
     end
 
     list_of_params = []
+    if !("ramp_time" in keys(pulse_params["Envelope Args"]))
+        pulse_params["Envelope Args"]["ramp_time"] = 0.0
+    end
     rt = pulse_params["Envelope Args"]["ramp_time"]
     pt = pulse_params["pulse_time"]
     for i in 1:length(stroboscopic_times)

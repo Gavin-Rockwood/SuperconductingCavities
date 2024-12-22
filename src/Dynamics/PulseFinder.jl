@@ -37,7 +37,8 @@ function FindStarkShift(hilbertspace::Hilbertspaces.Hilbertspace,
     starkshift_list; 
     make_plot = true, 
     state_names = ["ψ1", "ψ2"],
-    sub_logging = true
+    sub_logging = true,
+    return_fig_data = false
     )
     
     νs = ν .+ starkshift_list
@@ -92,6 +93,8 @@ function FindStarkShift(hilbertspace::Hilbertspaces.Hilbertspace,
 
     @info "Fit Stuff: "*Utils.tostr(fit.param)
     
+    to_return = Vector{Any}([fit.param[1], 1/(fit.param[2]*fit.param[3])])
+
     if make_plot 
         f = cm.Figure(size = (800, 500), px_per_unit = 3)
 
@@ -121,9 +124,22 @@ function FindStarkShift(hilbertspace::Hilbertspaces.Hilbertspace,
         cm.scatterlines!(ax2, x, difs, label = "Difs", marker = '+', markersize = 20, color = :black, linewidth = 0.5)
         cm.axislegend(ax2)
         cm.display(f)
+
+        if return_fig_data
+            top_dat = Dict{Any, Any}("x" => x)
+            for i in 1:length(dims(tracking_res, :State))
+                state = dims(tracking_res, :State)[i]
+                top_dat[state] = ys[i]
+            end
+
+            bottom_dat = Dict{Any, Any}("x" => x, "y" => difs, "fit_x" => x2, "fit_y" => y2)
+
+            fig_data = Dict{Any, Any}("top" => top_dat, "bottom" => bottom_dat)
+            push!(to_return, fig_data)
+        end
     end
     
-    return [fit.param[1], 1/(fit.param[2]*fit.param[3])]
+    return to_return
     
 
 end
