@@ -108,7 +108,7 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     end
 
     if spns == "Final"
-        tspan = [op_params["pulse_time"]]
+        tspan = [op_params[0,"pulse_time"]]
     end
 
     solver_kwargs_sym = Dict{Symbol, Any}()
@@ -118,8 +118,15 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     if (use_logging) @info "Running Time Evolution" end
     sleep(0.01)
     res = qt.sesolve(2*π*Ĥ, ψ, tspan, H_t = Ĥ_D; solver_kwargs_sym...)
-    @debug res
     
+    times = res.times
+    states = rest.states
+    
+    if spns == "Final"
+        times = [times[end]]
+        states = [states[end]]
+    end
+
     if (use_logging)  @info "Time Evolution Complete" end
     sleep(0.01)
 
@@ -127,12 +134,12 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
         @info "Saving Steps"
         sleep(0.01)
         
-        properties = Dict{Any, Any}("Data"=>"Wave Functions", "Time"=>string(now()), "Times" => res.times, "Operator" => op_name, "Operator_Parameters" => string(op_params))
+        properties = Dict{Any, Any}("Data"=>"Wave Functions", "Time"=>string(now()), "Times" => times, "Operator" => op_name, "Operator_Parameters" => string(op_params))
         
         ds_properties = Dict{Any, Any}("dims" => collect(Ĥ.dims), "Data"=>"Wave Functions", "Solver_Args" => string(solver_kwargs))
         ds_properties = merge(ds_properties, other_ds_properties)
 
-        ds = Utils.Qobj_List_To_DS(res.states; cube_name = Symbol(step_name), cube_properties = properties, ds_properties = ds_properties, step_name = Symbol(step_name*"_steps"))
+        ds = Utils.Qobj_List_To_DS(states; cube_name = Symbol(step_name), cube_properties = properties, ds_properties = ds_properties, step_name = Symbol(step_name*"_steps"))
         
         if save_step
             file_name = save_path*run_name
@@ -153,7 +160,7 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     if to_return == "All"
         return res
     elseif to_return == "Last"
-        return res.states[end]
+        return states[end]
     end
 end
 
