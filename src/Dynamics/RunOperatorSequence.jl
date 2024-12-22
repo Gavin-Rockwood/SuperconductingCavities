@@ -98,9 +98,8 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
         return drive_coef
     end
     Ĥ_D = Get_Ĥ_D(Ô_D, drive_coef)
-
-    println(typeof(spns))
-    if (length(tspan) == 0) & (typeof(spns) <: String)
+    
+    if (length(tspan) == 0) & !(typeof(spns) <: String)
         tspan = collect(LinRange(0, op_params["pulse_time"], Int(ceil(op_params["pulse_time"]*spns))+1))
     end
 
