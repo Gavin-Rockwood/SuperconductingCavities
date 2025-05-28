@@ -3,8 +3,8 @@ module Envelopes
     Envelope_Dict_Cal = Dict{Any, Any}()
 
     include("Square.jl")
-    include("Guassian.jl")
-    include("Guassian_Ramp.jl")
+    include("Gaussian.jl")
+    include("Gaussian_Ramp.jl")
     include("Sine_Squared.jl")
     include("Sine_Squared_Ramp.jl")
     include("Bump.jl")

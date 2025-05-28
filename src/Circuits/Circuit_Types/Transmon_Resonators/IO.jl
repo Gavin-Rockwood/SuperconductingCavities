@@ -124,8 +124,6 @@ function load(file)
 
     Cavity_Names = saved_dict["Main_Config"]["Cavity_Names"]
 
-    
-
     model = init(Eᶜ, Eʲ, Eᵒˢᶜs, gs, Nₜ, Nᵣs, Nₜ_cut=Nₜ_cut, ng=ng, Cavity_Names=Cavity_Names, κᵗᶜ=κᵗᶜ, κᵗᵈ=κᵗᵈ, κᶜᶜ = κᶜᶜ, Model_Name = Model_Name, Save_Path = Save_Path, dₜ = dₜ, dᵣ = dᵣ)
     
     

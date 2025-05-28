@@ -86,8 +86,11 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     end
 
     envelope = Envelopes.Get_Envelope(op_params["Envelope"], op_params["Envelope Args"], digitize = digitize, step_length = step_length)
-
-    drive_coef = Get_Drive_Coef(ν, ε; envelope = envelope, drive_time = op_params["pulse_time"])
+    init_phase = 0
+    if "phase" in keys(op_params)
+        init_phase = op_params["phase"]
+    end
+    drive_coef = Get_Drive_Coef(ν, ε, envelope = envelope, init_phase = init_phase)
     
     if "filter_params" in keys(op_params)
         filter_params = Dict(Symbol(key)=>val for (key, val) in op_params["filter_params"]) # turns the string keys into symbols. 
@@ -104,7 +107,8 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     end
 
     if spns == "Stroboscopic"
-        tspan = Get_Stroboscopic_Times(op_params)[1:strob_skip:end]
+        times = Get_Stroboscopic_Times(op_params)
+        tspan = vcat(times[1:strob_skip:end], times[end])
     end
 
     if spns == "Final"
@@ -122,11 +126,6 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     times = res.times
     states = res.states
     
-    if spns == "Final"
-        times = [times[end]]
-        states = [states[end]]
-    end
-
     if (use_logging)  @info "Time Evolution Complete" end
     sleep(0.01)
 
@@ -140,7 +139,7 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
         ds_properties = merge(ds_properties, other_ds_properties)
 
         ds = Utils.Qobj_List_To_DS(states; cube_name = Symbol(step_name), cube_properties = properties, ds_properties = ds_properties, step_name = Symbol(step_name*"_steps"))
-        
+    
         if save_step
             file_name = save_path*run_name
             if save_as_seperate_file
@@ -254,7 +253,11 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
     end
 
     envelope = Envelopes.Get_Envelope(op_params["Envelope"], op_params["Envelope Args"], digitize = digitize, step_length = step_length)
-    drive_coef = Get_Drive_Coef(ν, ε, envelope = envelope)
+    init_phase = 0
+    if "phase" in keys(op_params)
+        init_phase = op_params["phase"]
+    end
+    drive_coef = Get_Drive_Coef(ν, ε, envelope = envelope, init_phase = init_phase)
 
     if "filter_params" in keys(op_params)
         drive_coef = Get_Low_Pass_Filtered_Drive_Coef(drive_coef, op_params["pulse_time"]; op_params["filter_params"]...)
@@ -266,7 +269,8 @@ function RunSingleOperator(Ĥ::qt.QuantumObject, Ô_D::qt.QuantumObject,
         tspan = collect(LinRange(0, op_params["pulse_time"], Int(ceil(op_params["pulse_time"]*spns))+1))
     end
     if spns == "Stroboscopic"
-        tspan = Get_Stroboscopic_Times(op_params)[1:strob_skip:end]
+        times = Get_Stroboscopic_Times(op_params)
+        tspan = vcat(times[1:strob_skip:end], times[end])
     end
     
     solver_kwargs_sym = Dict{Symbol, Any}()

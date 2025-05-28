@@ -77,7 +77,7 @@ function PlotSingleModeEvolution(model,
 
     tlevels = model.Ĥ.dims[1]
     clevels = model.Ĥ.dims[2]
-    cmap=(cm.cgrad(cmap_name, tlevels, categorical = true))
+    cmap=(cm.cgrad(cmap_name, clevels, categorical = true))
 
     #return(EVs)
 
@@ -109,8 +109,6 @@ function PlotSingleModeEvolution(model,
                 if maximum(abs.(y)) < show_thresh
                     alpha = 0.0
                 end
-                
-
                 cm.scatterlines!(ax, x, real.(y), marker = markers[t+1], color = (cmap[c+1], alpha), markersize = scatterlines_kwargs["markersize"], linewidth = scatterlines_kwargs["linewidth"])
             end
             cm.scatterlines!(ax, [0], [0], marker = markers[t+1], color = (cmap[c+1]), label = label, markersize = scatterlines_kwargs["markersize"], linewidth = scatterlines_kwargs["linewidth"], visible = false)
@@ -123,9 +121,9 @@ function PlotSingleModeEvolution(model,
     #    cm.scatterlines!(ax, [0], [0], marker = markers[t+1], color = cmap[1], label = label, markersize = scatterlines_kwargs["markersize"], linewidth = scatterlines_kwargs["linewidth"])
     #end
 
-    tick_loc = collect(0:tlevels-1).+0.5
-    tick_name = string.(collect(0:tlevels-1))
-    cm.Colorbar(f[1,2], colormap = cmap, limits = (0,tlevels), ticks = (tick_loc, tick_name), label = "Photon Number")
+    tick_loc = collect(0:clevels-1).+0.5
+    tick_name = string.(collect(0:clevels-1))
+    cm.Colorbar(f[1,2], colormap = cmap, limits = (0,clevels), ticks = (tick_loc, tick_name), label = "Photon Number")
 
     label = "Transmon\nLevels"
     #if legend_kwargs[:orientation] == :vertical

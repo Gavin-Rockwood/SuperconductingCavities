@@ -162,7 +162,8 @@ function OptimizePulse(Ĥ,Ô_D,
     chirp_params = nothing, 
     digitize = false, 
     step_length = 2.3,
-    filter_params = Dict{Any, Any}()
+    filter_params = Dict{Any, Any}(),
+    round_to_drive_freq = false
     )
     
     drive_args = Dict{Any, Any}("pulse_time" => 0.0, "epsilon" => ε, "Envelope" => envelope, "shift"=>stark_shift, "freq_d"=>freq_d)
@@ -190,6 +191,10 @@ function OptimizePulse(Ĥ,Ô_D,
         list_of_drive_args = []
         for i in 1:length(tspan)
             t = tspan[i]
+            if round_to_drive_freq
+                freq = abs(drive_args["freq_d"]+drive_args["shift"])
+                t = round(t*freq)/freq
+            end
             @info "On Step $i: t = $t"
             drive_args["pulse_time"] = t
 

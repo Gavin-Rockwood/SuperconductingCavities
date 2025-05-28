@@ -30,10 +30,11 @@ function Get_Drive_Coef(ν::T1,
     envelope = Envelopes.Square_Envelope,
     drive_time = 0,
     return_ϕ = false,
-    return_ℂ = false
+    return_ℂ = false,
+    init_phase = 0
     )where T1<:Number
     
-    ϕ(t) = 2π*ν*t
+    ϕ(t) = 2π*ν*t+init_phase
     if return_ϕ
         return ϕ
     end
@@ -82,6 +83,7 @@ function Get_Drive_Coef(ν::T1,
     envelope = Envelopes.Square_Envelope,
     drive_time = 0,
     t0 = 0,
+    init_phase = 0,
     ϕ = nothing, # Incase you want to use a precomputed phase
     return_ϕ = false,
     return_ℂ = false
@@ -101,12 +103,11 @@ function Get_Drive_Coef(ν::T1,
             return ϕ
         end
     end
-
     function drive_coef(t, params...; return_ℂ = return_ℂ, kwargs...)
         if return_ℂ
-            return 2*π*εt(t)*exp(-1im*ϕ(t))
+            return 2*π*εt(t)*exp(-1im*(ϕ(t)+init_phase))
         else
-            return 2*π*εt(t)*sin(ϕ(t))
+            return 2*π*εt(t)*sin(ϕ(t)+init_phase)
         end
     end
     return drive_coef
@@ -139,7 +140,8 @@ function Get_Drive_Coef(ν::T1,
     ε;
     envelope = Envelopes.Square_Envelope,
     drive_time = 0,
-    return_ℂ = false
+    return_ℂ = false,
+    init_phase = 0
     )where T1<:AbstractArray
     if typeof(ε)<:Number
         ε = [ε for i in 1:length(ν)]
@@ -147,9 +149,9 @@ function Get_Drive_Coef(ν::T1,
     
     function drive_coef(t, params...; return_ℂ = return_ℂ, kwargs...)
         if return_ℂ
-            return sum(2*π.*ε.*envelope(t).*exp.(-1im.*(2π.*ν.*t)))
+            return sum(2*π.*ε.*envelope(t).*exp.(-1im.*(2π.*ν.*t+init_phase)))
         else 
-            return sum(2*π*ε.*envelope(t).*sin.(2π.*ν.*t))
+            return sum(2*π*ε.*envelope(t).*sin.(2π.*ν.*t.+init_phase))
         end
     end
 
@@ -287,7 +289,6 @@ function Propagator(hilbertspace, Ĥₜ, tf; progress_meter = false, ti = 0)
     end
     return U
 end
-
 
 
 """
