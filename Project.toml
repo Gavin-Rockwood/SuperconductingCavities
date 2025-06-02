@@ -36,11 +36,13 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 YAXArrays = "c21b50f5-aa40-41ea-b809-c0f5e47bfa5c"
 Peaks = "18e31ff7-3703-566c-8e60-38913d67486b"
+SteadyStateDiffEq = "9672c7b4-1e72-59bd-8a11-6ac3964bc41f"
 
 [compat]
 julia = "1.10 - 1.11"
 SciMLBase = "2.56.4"
 DifferentialEquations = "7.14.0"
+SteadyStateDiffEq = "2.4.1"
 QuantumToolbox = "0.13.1"
 
 [extras]
